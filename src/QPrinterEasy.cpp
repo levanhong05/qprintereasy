@@ -33,14 +33,20 @@
 #include <QPainter>
 #include <QRectF>
 #include <QRect>
+#include <QPrintPreviewDialog>
+#include <QPrinter>
+#include <QPrintDialog>
 
 
 /** \brief Only keeps private datas */
 class QPrinterEasyPrivate
 {
 public:
+    QPrinterEasyPrivate() : m_Printer(0) {}
+
     QTextDocument m_Header, m_Footer;
     QPixmap m_Watermark;
+    QPrinter *m_Printer;
 };
 
 
@@ -48,14 +54,54 @@ QPrinterEasy::QPrinterEasy( QObject * parent )
     : QObject(parent),
     d(0)
 {
+    setObjectName("QPrinterEasy");
     d = new QPrinterEasyPrivate();
 }
 
 QPrinterEasy::~QPrinterEasy()
 {
-    if (d) delete d;
+    if (d) {
+        if ( d->m_Printer )
+            delete d->m_Printer;
+        d->m_Printer = 0;
+        delete d;
+    }
     d=0;
 }
+
+bool QPrinterEasy::createPrinter( QWidget *parent )
+{
+     if ( d->m_Printer )
+         delete d->m_Printer;
+     d->m_Printer = new QPrinter();
+     QPrintDialog *dialog = new QPrintDialog(d->m_Printer, parent);
+     dialog->setWindowTitle(tr("Print Document"));
+     if (dialog->exec() != QDialog::Accepted)
+         return true;
+     return false;
+}
+
+bool QPrinterEasy::previewDialog( QWidget *parent)
+{
+    if (!d->m_Printer)
+        return false;
+    QPrintPreviewDialog dialog(d->m_Printer, parent);
+    connect( &dialog, SIGNAL(paintRequested(QPrinter *)), this, SLOT(print(QPrinter *)) );
+    dialog.exec();
+}
+
+bool QPrinterEasy::print( QPrinter *printer )
+{
+    if ( (!printer) && (!d->m_Printer) )
+        return false;
+    if (!printer)
+        printer = d->m_Printer;
+
+    // draw elements to printer
+
+    return true;
+}
+
 
 /*
     QTextDocument td;
