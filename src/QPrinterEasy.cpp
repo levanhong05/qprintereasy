@@ -36,16 +36,16 @@
 #include <QPrintPreviewDialog>
 #include <QPrinter>
 #include <QPrintDialog>
-
+#include <QPixmap>
 
 /** \brief Only keeps private datas */
 class QPrinterEasyPrivate
 {
 public:
-    QPrinterEasyPrivate() : m_Printer(0) {}
+    QPrinterEasyPrivate() : m_Watermark(0), m_Printer(0) {}
 
     QTextDocument m_Header, m_Footer;
-    QPixmap m_Watermark;
+    QPixmap *m_Watermark;
     QPrinter *m_Printer;
 };
 
@@ -69,7 +69,7 @@ QPrinterEasy::~QPrinterEasy()
     d=0;
 }
 
-bool QPrinterEasy::createPrinter( QWidget *parent )
+bool QPrinterEasy::askForPrinter( QWidget *parent )
 {
      if ( d->m_Printer )
          delete d->m_Printer;
@@ -81,6 +81,11 @@ bool QPrinterEasy::createPrinter( QWidget *parent )
      return false;
 }
 
+bool QPrinterEasy::useDefaultPrinter()
+{
+    // TODO
+}
+
 bool QPrinterEasy::previewDialog( QWidget *parent)
 {
     if (!d->m_Printer)
@@ -88,6 +93,7 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
     QPrintPreviewDialog dialog(d->m_Printer, parent);
     connect( &dialog, SIGNAL(paintRequested(QPrinter *)), this, SLOT(print(QPrinter *)) );
     dialog.exec();
+    return true;
 }
 
 bool QPrinterEasy::print( QPrinter *printer )
