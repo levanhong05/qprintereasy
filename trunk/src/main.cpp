@@ -33,8 +33,11 @@
 #include <QtGui>
 #include <QFile>
 
+
 int main(int argc, char *argv[])
 {
+    QApplication app(argc, argv);
+
     QString header;
     QString footer;
     QString document;
@@ -59,6 +62,14 @@ int main(int argc, char *argv[])
         document = f.readAll();
         f.close();
     }
+
+    QPrinterEasy pe;
+    pe.addHtmlHeader( header );
+    pe.addHtmlFooter( footer );
+    QTextDocument doc(document);
+    pe.setTextDocument( doc );
+    pe.askForPrinter();
+    pe.previewDialog();
 
     return 0;
 }

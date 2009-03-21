@@ -40,7 +40,7 @@ class QPrinterEasyPrivate;
 #include <QTextDocument>
 #include <QPrinter>
 
-class Q_EXPORT QPrinterEasy : QObject
+class Q_EXPORT QPrinterEasy : public QObject
 {
     Q_OBJECT
 public:
@@ -52,19 +52,19 @@ public:
         OnePageOnly             // must set the page number
     };
 
-    QPrinterEasy( QObject * parent );
+    QPrinterEasy( QObject * parent = 0);
     ~QPrinterEasy();
 
-    bool createPrinter( QWidget *parent=0 );
-    bool previewDialog( QWidget *parent );
+    bool createPrinter( QWidget *parent = 0 );
+    bool previewDialog( QWidget *parent = 0 );
 
-    void addHtmlHeader( const QString & html, Presence p = OnEachPages );
-    void addHtmlFooter( const QString & html, Presence p = OnEachPages );
-    void setTextDocument( const QTextDocument & textDoc );
+    void addHtmlHeader( const QString & html, Presence p = OnEachPages ) {}
+    void addHtmlFooter( const QString & html, Presence p = OnEachPages ) {}
+    void setTextDocument( const QTextDocument & textDoc )                {}
 
     void addWatermark( const QPixmap & pix,
                        Presence p = OnEachPages,
-                       Qt::AlignmentFlag alignement = Qt::AlignCenter);
+                       Qt::AlignmentFlag alignement = Qt::AlignCenter)   {}
 
     bool print( const QTextDocument & docToPrint );
 
