@@ -31,8 +31,34 @@
 #include "QPrinterEasy.h"
 
 #include <QtGui>
+#include <QFile>
 
 int main(int argc, char *argv[])
 {
+    QString header;
+    QString footer;
+    QString document;
+
+    {
+        QFile f("header.html");
+        f.open(QIODevice::ReadOnly);
+        QString content = f.readAll();
+        f.close();
+    }
+
+    {
+        QFile f("footer.html");
+        f.open(QIODevice::ReadOnly);
+        footer = f.readAll();
+        f.close();
+    }
+
+    {
+        QFile f("document.html");
+        f.open(QIODevice::ReadOnly);
+        document = f.readAll();
+        f.close();
+    }
+
     return 0;
 }
