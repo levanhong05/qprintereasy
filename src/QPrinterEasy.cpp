@@ -30,6 +30,11 @@
  **********************************************************************************/
 #include "QPrinterEasy.h"
 
+#include <QPainter>
+#include <QRectF>
+#include <QRect>
+
+
 /** \brief Only keeps private datas */
 class QPrinterEasyPrivate
 {
@@ -51,3 +56,37 @@ QPrinterEasy::~QPrinterEasy()
     if (d) delete d;
     d=0;
 }
+
+/*
+    QTextDocument td;
+    td.setHtml(content);
+    QPrinter p;
+    QPrintDialog pd(&p, 0);
+    pd.exec();
+    td.setPageSize(p.pageRect().size());
+    QRect innerRect = p.pageRect();
+    innerRect.setTop(innerRect.top() + 20);
+    innerRect.setBottom(innerRect.bottom() - 30);
+    QRect contentRect = QRect(QPoint(0,0), td.size().toSize());
+    QRect currentRect = QRect(QPoint(0,0), innerRect.size());
+    QPainter painter(&p);
+    int count = 0;
+    painter.save();
+    painter.translate(0, 30);
+    while (currentRect.intersects(contentRect)) {
+        td.drawContents(&painter, currentRect);
+        count++;
+        currentRect.translate(0, currentRect.height());
+        painter.restore();
+        painter.drawText(10, 10, QString("Header %1").arg(count));
+        painter.drawText(10, p.pageRect().bottom() - 10, QString("Footer %1").arg(count));
+        painter.save();
+        painter.translate(0, -currentRect.height() * count + 30);
+        if (currentRect.intersects(contentRect))
+            p.newPage();
+    }
+    painter.restore();
+    painter.end();
+    */
+
+
