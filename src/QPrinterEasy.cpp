@@ -93,14 +93,15 @@ bool QPrinterEasy::askForPrinter( QWidget *parent )
 void QPrinterEasy::setHeader( const QString & html, Presence p )
 {
     d->m_Header.setHtml( html );
-    d->m_Header.setTextWidth( d->m_Printer->paperSize(QPrinter::DevicePixel).rwidth() );
+    d->m_Header.setTextWidth( d->m_Printer->pageRect().width() );
+//    qWarning() << "header width" << d->m_Header.size() << d->m_Printer->pageRect().width();
     // TODO presence
 }
 
 void QPrinterEasy::setFooter( const QString & html, Presence p )
 {
     d->m_Footer.setHtml( html );
-    d->m_Footer.setTextWidth( d->m_Printer->paperSize(QPrinter::DevicePixel).rwidth() );
+    d->m_Footer.setTextWidth( d->m_Printer->pageRect().width() );
 }
 
 void QPrinterEasy::setContent( const QString & html )
@@ -118,7 +119,7 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
 {
     if (!d->m_Printer)
         return false;
-
+/*
     // For test
     QDialog dial;
     QGridLayout g(&dial);
@@ -143,7 +144,7 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
     g.addWidget( buttonBox );
     dial.exec();
     // end of test
-
+*/
     QPrintPreviewDialog dialog(d->m_Printer, parent);
     connect( &dialog, SIGNAL(paintRequested(QPrinter *)), this, SLOT(print(QPrinter *)) );
     dialog.exec();
@@ -160,12 +161,11 @@ bool QPrinterEasy::print( QPrinter *printer )
     // prepare drawing areas
     int headerHeight = d->m_Header.size().height();
     int footerHeight = d->m_Footer.size().height();
-
-    QRect innerRect = printer->pageRect(); // the content area
+    QRect innerRect = printer->pageRect();                                     // the content area
     innerRect.setTop(innerRect.top() + headerHeight );
     innerRect.setBottom(innerRect.bottom() - footerHeight );
-    QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );     // whole page
-    QRect currentRect = QRect(QPoint(0,0), innerRect.size());                  // content area for a page
+    QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );     // whole document
+    QRect currentRect = QRect(QPoint(0,0), innerRect.size());                  // content area
 
     // This is a test : commenting this will cut characters of content +++
     QSize size( printer->pageRect().size() );
@@ -178,24 +178,24 @@ bool QPrinterEasy::print( QPrinter *printer )
     painter.save();
     painter.translate(0, headerHeight); // go under the header
     while (currentRect.intersects(contentRect)) {
-//        painter.drawRect( currentRect );
-        painter.drawRect( contentRect );
+        painter.drawRect( currentRect );
+//        painter.drawRect( contentRect );
         d->m_Content.drawContents(&painter, currentRect);
         count++;
         currentRect.translate(0, currentRect.height());
         painter.restore();  // return to the beginning of the page
 
         // draw header
-        QRectF headRect = QRectF(QPoint(0,0), d->m_Header.size() );
+        QRectF headRect = QRectF(QPoint(0,0), d->m_Header.size() );//textWidth(), d->m_Header.size().height() );
         painter.drawRect( headRect );
         d->m_Header.drawContents(&painter, headRect );
 //        painter.drawText(10, 10, d->m_Header.toHtml() );
 
         // draw footer
-        QRectF footRect = QRectF(QPoint(10,printer->pageRect().bottom() - footerHeight), d->m_Footer.size() );
+        QRectF footRect = QRectF(QPoint(0,printer->pageRect().bottom() - footerHeight), d->m_Footer.size() );
         painter.drawRect( footRect );
         d->m_Footer.drawContents(&painter, footRect);
-        painter.drawText(10, printer->pageRect().bottom() - footerHeight, QString("Footer %1").arg(count));
+//        painter.drawText(10, printer->pageRect().bottom() - footerHeight, QString("Footer %1").arg(count));
 
         // calculate new page
         painter.save();

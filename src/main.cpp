@@ -69,6 +69,9 @@ int main(int argc, char *argv[])
         f.close();
     }
 
+    QTextDocument td(document);
+    qWarning() << td.blockCount();
+
     QPrinterEasy pe;
     pe.askForPrinter();
     pe.setHeader( header );
