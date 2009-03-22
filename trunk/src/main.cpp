@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     }
 
     QTextDocument td(document);
-    qWarning() << td.blockCount();
+    qWarning() << "document blockCount" << td.blockCount();
 
     QPrinterEasy pe;
     pe.askForPrinter();
