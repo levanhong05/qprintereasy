@@ -64,11 +64,10 @@ int main(int argc, char *argv[])
     }
 
     QPrinterEasy pe;
-    pe.addHtmlHeader( header );
-    pe.addHtmlFooter( footer );
-    QTextDocument doc(document);
-    pe.setTextDocument( doc );
     pe.askForPrinter();
+    pe.setHeader( header );
+    pe.setFooter( footer );
+    pe.setContent( document );
     pe.previewDialog();
 
     return 0;

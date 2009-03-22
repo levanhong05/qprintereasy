@@ -37,6 +37,7 @@
 #include <QPrinter>
 #include <QPrintDialog>
 #include <QPixmap>
+#include <QSizeF>
 
 /** \brief Only keeps private datas */
 class QPrinterEasyPrivate
@@ -44,7 +45,7 @@ class QPrinterEasyPrivate
 public:
     QPrinterEasyPrivate() : m_Watermark(0), m_Printer(0) {}
 
-    QTextDocument m_Header, m_Footer;
+    QTextDocument m_Header, m_Footer, m_Content;
     QPixmap *m_Watermark;
     QPrinter *m_Printer;
 };
@@ -81,6 +82,25 @@ bool QPrinterEasy::askForPrinter( QWidget *parent )
      return false;
 }
 
+void QPrinterEasy::setHeader( const QString & html, Presence p )
+{
+    d->m_Header.setHtml( html );
+    d->m_Header.setTextWidth( d->m_Printer->paperSize(QPrinter::DevicePixel).rwidth() );
+    // TODO presence
+}
+
+void QPrinterEasy::setFooter( const QString & html, Presence p )
+{
+    d->m_Footer.setHtml( html );
+    d->m_Footer.setTextWidth( d->m_Printer->paperSize(QPrinter::DevicePixel).rwidth() );
+}
+
+void QPrinterEasy::setContent( const QString & html )
+{
+    d->m_Content.setHtml( html );
+}
+
+
 bool QPrinterEasy::useDefaultPrinter()
 {
     // TODO
@@ -104,29 +124,43 @@ bool QPrinterEasy::print( QPrinter *printer )
         printer = d->m_Printer;
 
     // draw elements to printer
+    QRect innerRect = printer->pageRect();
+    innerRect.setTop(innerRect.top() + 20);
+    innerRect.setBottom(innerRect.bottom() - 30);
+    QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize());
+    QRect currentRect = QRect(QPoint(0,0), innerRect.size());
+    QPainter painter(printer);
+    int count = 0;
+    painter.save();
+
+    // C'est ici qu'on dessine dans le PAINTER
 
     return true;
 }
 
 
 /*
-    QTextDocument td;
-    td.setHtml(content);
-    QPrinter p;
-    QPrintDialog pd(&p, 0);
+    // create printer
+    QPrinter printer;
+    QPrintDialog pd(&printer, 0);
     pd.exec();
-    td.setPageSize(p.pageRect().size());
-    QRect innerRect = p.pageRect();
+
+    // create text document
+    QTextDocument texdoc;
+    texdoc.setHtml(content);
+    texdoc.setPageSize(printer.pageRect().size());
+
+    QRect innerRect = printer.pageRect();
     innerRect.setTop(innerRect.top() + 20);
     innerRect.setBottom(innerRect.bottom() - 30);
-    QRect contentRect = QRect(QPoint(0,0), td.size().toSize());
+    QRect contentRect = QRect(QPoint(0,0), texdoc.size().toSize());
     QRect currentRect = QRect(QPoint(0,0), innerRect.size());
-    QPainter painter(&p);
+    QPainter painter(&printer);
     int count = 0;
     painter.save();
     painter.translate(0, 30);
     while (currentRect.intersects(contentRect)) {
-        td.drawContents(&painter, currentRect);
+        texdoc.drawContents(&painter, currentRect);
         count++;
         currentRect.translate(0, currentRect.height());
         painter.restore();
@@ -135,7 +169,7 @@ bool QPrinterEasy::print( QPrinter *printer )
         painter.save();
         painter.translate(0, -currentRect.height() * count + 30);
         if (currentRect.intersects(contentRect))
-            p.newPage();
+            printer.newPage();
     }
     painter.restore();
     painter.end();
