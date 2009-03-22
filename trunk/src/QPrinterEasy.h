@@ -55,12 +55,13 @@ public:
     QPrinterEasy( QObject * parent = 0);
     ~QPrinterEasy();
 
-    bool createPrinter( QWidget *parent = 0 );
+    bool askForPrinter( QWidget *parent = 0 );
+    bool useDefaultPrinter();
     bool previewDialog( QWidget *parent = 0 );
 
-    void addHtmlHeader( const QString & html, Presence p = OnEachPages ) {}
-    void addHtmlFooter( const QString & html, Presence p = OnEachPages ) {}
-    void setTextDocument( const QTextDocument & textDoc )                {}
+    void setHeader( const QString & html, Presence p = OnEachPages );
+    void setFooter( const QString & html, Presence p = OnEachPages );
+    void setContent( const QString & html );
 
     void addWatermark( const QPixmap & pix,
                        Presence p = OnEachPages,
