@@ -39,6 +39,14 @@
 #include <QPixmap>
 #include <QSizeF>
 
+// For test
+#include <QTextBrowser>
+#include <QDialog>
+#include <QGridLayout>
+#include <QDebug>
+#include <QDialogButtonBox>
+// End
+
 /** \brief Only keeps private datas */
 class QPrinterEasyPrivate
 {
@@ -85,6 +93,7 @@ bool QPrinterEasy::askForPrinter( QWidget *parent )
 void QPrinterEasy::setHeader( const QString & html, Presence p )
 {
     d->m_Header.setHtml( html );
+    qWarning() << html << d->m_Header.toHtml();
     d->m_Header.setTextWidth( d->m_Printer->paperSize(QPrinter::DevicePixel).rwidth() );
     // TODO presence
 }
@@ -110,6 +119,30 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
 {
     if (!d->m_Printer)
         return false;
+
+    QDialog dial;
+    QGridLayout g(&dial);
+    QTextBrowser t(&dial);
+    t.setDocument( &d->m_Content );
+    g.addWidget( &t );
+
+    QTextBrowser h(&dial);
+    h.setDocument( &d->m_Header );
+    qWarning() << d->m_Header.toHtml();
+    g.addWidget( &h );
+
+    QTextBrowser f(&dial);
+    f.setDocument( &d->m_Footer );
+    g.addWidget( &f );
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
+                                      | QDialogButtonBox::Cancel);
+
+     connect(buttonBox, SIGNAL(accepted()), &dial, SLOT(accept()));
+     connect(buttonBox, SIGNAL(rejected()), &dial, SLOT(reject()));
+    g.addWidget( buttonBox );
+    dial.exec();
+
     QPrintPreviewDialog dialog(d->m_Printer, parent);
     connect( &dialog, SIGNAL(paintRequested(QPrinter *)), this, SLOT(print(QPrinter *)) );
     dialog.exec();
@@ -124,28 +157,31 @@ bool QPrinterEasy::print( QPrinter *printer )
         printer = d->m_Printer;
 
     // prepare drawing areas
+    int headerHeight = d->m_Header.size().height();
+    int footerHeight = d->m_Footer.size().height();
     QRect innerRect = printer->pageRect(); // the content area
-    innerRect.setTop(innerRect.top() + d->m_Header.size().height() );
-    innerRect.setBottom(innerRect.bottom() - d->m_Footer.size().height() );
+    innerRect.setTop(innerRect.top() + headerHeight );
+    innerRect.setBottom(innerRect.bottom() - footerHeight );
     QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );
     QRect currentRect = QRect(QPoint(0,0), innerRect.size());
 
     // This is a test
     QSize size( printer->pageRect().size() );
-    size.setHeight( size.height() - d->m_Header.pageSize().height() - d->m_Footer.pageSize().height() );
+    size.setHeight( size.height() - headerHeight - footerHeight );
     d->m_Content.setPageSize(size);
     // End of test
 
     QPainter painter(printer);
     int count = 0;
     painter.save();
-    painter.translate(0, 30);
+    painter.translate(0, headerHeight); // go under the header
     while (currentRect.intersects(contentRect)) {
         d->m_Content.drawContents(&painter, currentRect);
         count++;
-        currentRect.translate(0, currentRect.height());
-        painter.restore();
-//        d->m_Header.drawContents(&painter, currentRect );
+        currentRect.translate(0, currentRect.height()); // go under header+content
+        painter.restore();  // return to the beginning of the painter
+
+//        d->m_Header.drawContents(&painter, QRect(QPoint(10,10), d->m_Header.size().toSize() ) );
         painter.drawText(10, 10, d->m_Header.toHtml() );
 //        d->m_Footer.drawContents(&painter, contentRect);
         painter.drawText(10, printer->pageRect().bottom() - 10, QString("Footer %1").arg(count));

@@ -32,6 +32,7 @@
 
 #include <QtGui>
 #include <QFile>
+#include <QApplication>
 
 
 int main(int argc, char *argv[])
@@ -41,23 +42,28 @@ int main(int argc, char *argv[])
     QString header;
     QString footer;
     QString document;
+#ifdef Q_OS_MAC
+    QString path = app.applicationDirPath() + "/../../../";
+#else
+    QString path = app.applicationDirPath() + "/";
+#endif
 
     {
-        QFile f("header.html");
-        f.open(QIODevice::ReadOnly);
-        QString content = f.readAll();
+        QFile f( path + "header.html");
+        qWarning() << f.fileName() << "open" << f.open(QIODevice::ReadOnly);
+        header = f.readAll();
         f.close();
     }
 
     {
-        QFile f("footer.html");
+        QFile f(path + "footer.html");
         f.open(QIODevice::ReadOnly);
         footer = f.readAll();
         f.close();
     }
 
     {
-        QFile f("document.html");
+        QFile f(path + "document.html");
         f.open(QIODevice::ReadOnly);
         document = f.readAll();
         f.close();
