@@ -117,7 +117,7 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
 {
     if (!d->m_Printer)
         return false;
-/*
+
     // For test
     QDialog dial;
     QGridLayout g(&dial);
@@ -127,7 +127,6 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
 
     QTextBrowser h(&dial);
     h.setDocument( &d->m_Header );
-    qWarning() << d->m_Header.toHtml();
     g.addWidget( &h );
 
     QTextBrowser f(&dial);
@@ -142,7 +141,7 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
     g.addWidget( buttonBox );
     dial.exec();
     // end of test
-*/
+
     QPrintPreviewDialog dialog(d->m_Printer, parent);
     connect( &dialog, SIGNAL(paintRequested(QPrinter *)), this, SLOT(print(QPrinter *)) );
     dialog.exec();
@@ -157,13 +156,15 @@ bool QPrinterEasy::print( QPrinter *printer )
         printer = d->m_Printer;
 
     // This is a test : commenting this will cut characters of content +++
+    int pageWidth = d->m_Printer->pageRect().width(); //TODO add margins
+    d->m_Header.setTextWidth( pageWidth );
+    d->m_Footer.setTextWidth( pageWidth );
     int headerHeight = d->m_Header.size().height();
     int footerHeight = d->m_Footer.size().height();
-    QSize size( printer->pageRect().size() );
+    QSize size;
     size.setHeight( size.height() - headerHeight - footerHeight );
+    size.setWidth( pageWidth );
     d->m_Content.setPageSize(size);
-    d->m_Header.setTextWidth( d->m_Printer->pageRect().width() );
-    d->m_Footer.setTextWidth( d->m_Printer->pageRect().width() );
     // End of test
 
     // prepare drawing areas
