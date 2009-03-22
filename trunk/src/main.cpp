@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     {
         QFile f( path + "header.html");
-        qWarning() << f.fileName() << "open" << f.open(QIODevice::ReadOnly);
+        f.open(QIODevice::ReadOnly);
         header = f.readAll();
         f.close();
     }

@@ -93,7 +93,6 @@ bool QPrinterEasy::askForPrinter( QWidget *parent )
 void QPrinterEasy::setHeader( const QString & html, Presence p )
 {
     d->m_Header.setHtml( html );
-    qWarning() << html << d->m_Header.toHtml();
     d->m_Header.setTextWidth( d->m_Printer->paperSize(QPrinter::DevicePixel).rwidth() );
     // TODO presence
 }
@@ -159,11 +158,14 @@ bool QPrinterEasy::print( QPrinter *printer )
     // prepare drawing areas
     int headerHeight = d->m_Header.size().height();
     int footerHeight = d->m_Footer.size().height();
+
+    qWarning() << "heigth : head" << headerHeight << "foot" << footerHeight;
+
     QRect innerRect = printer->pageRect(); // the content area
     innerRect.setTop(innerRect.top() + headerHeight );
     innerRect.setBottom(innerRect.bottom() - footerHeight );
-    QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );
-    QRect currentRect = QRect(QPoint(0,0), innerRect.size());
+    QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );     // whole page
+    QRect currentRect = QRect(QPoint(0,0), innerRect.size());                  // content area for a page
 
     // This is a test
     QSize size( printer->pageRect().size() );
@@ -176,17 +178,29 @@ bool QPrinterEasy::print( QPrinter *printer )
     painter.save();
     painter.translate(0, headerHeight); // go under the header
     while (currentRect.intersects(contentRect)) {
+//        painter.drawRect( currentRect );
+        painter.drawRect( contentRect );
         d->m_Content.drawContents(&painter, currentRect);
         count++;
-        currentRect.translate(0, currentRect.height()); // go under header+content
+        currentRect.translate(0, currentRect.height());
         painter.restore();  // return to the beginning of the painter
 
-//        d->m_Header.drawContents(&painter, QRect(QPoint(10,10), d->m_Header.size().toSize() ) );
-        painter.drawText(10, 10, d->m_Header.toHtml() );
-//        d->m_Footer.drawContents(&painter, contentRect);
-        painter.drawText(10, printer->pageRect().bottom() - 10, QString("Footer %1").arg(count));
+        // draw header
+        QRectF headRect = QRectF(QPoint(0,0), d->m_Header.size() );
+        qWarning() << headRect;
+        painter.drawRect( headRect );
+        d->m_Header.drawContents(&painter, headRect );
+//        painter.drawText(10, 10, d->m_Header.toHtml() );
+
+        // draw footer
+        QRectF footRect = QRectF(QPoint(10,printer->pageRect().bottom() - footerHeight), d->m_Footer.size() );
+        painter.drawRect( footRect );
+        d->m_Footer.drawContents(&painter, footRect);
+        painter.drawText(10, printer->pageRect().bottom() - footerHeight, QString("Footer %1").arg(count));
+
+        // calculate new page
         painter.save();
-        painter.translate(0, -currentRect.height() * count + 30);
+        painter.translate(0, -currentRect.height() * count + headerHeight);
         if (currentRect.intersects(contentRect))
             printer->newPage();
     }
