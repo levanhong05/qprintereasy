@@ -93,7 +93,6 @@ bool QPrinterEasy::askForPrinter( QWidget *parent )
 void QPrinterEasy::setHeader( const QString & html, Presence p )
 {
     d->m_Header.setHtml( html );
-    d->m_Header.setTextWidth( d->m_Printer->pageRect().width() );
 //    qWarning() << "header width" << d->m_Header.size() << d->m_Printer->pageRect().width();
     // TODO presence
 }
@@ -101,7 +100,6 @@ void QPrinterEasy::setHeader( const QString & html, Presence p )
 void QPrinterEasy::setFooter( const QString & html, Presence p )
 {
     d->m_Footer.setHtml( html );
-    d->m_Footer.setTextWidth( d->m_Printer->pageRect().width() );
 }
 
 void QPrinterEasy::setContent( const QString & html )
@@ -158,30 +156,37 @@ bool QPrinterEasy::print( QPrinter *printer )
     if (!printer)
         printer = d->m_Printer;
 
-    // prepare drawing areas
+    // This is a test : commenting this will cut characters of content +++
     int headerHeight = d->m_Header.size().height();
     int footerHeight = d->m_Footer.size().height();
+    QSize size( printer->pageRect().size() );
+    size.setHeight( size.height() - headerHeight - footerHeight );
+    d->m_Content.setPageSize(size);
+    d->m_Header.setTextWidth( d->m_Printer->pageRect().width() );
+    d->m_Footer.setTextWidth( d->m_Printer->pageRect().width() );
+    // End of test
+
+    // prepare drawing areas
     QRect innerRect = printer->pageRect();                                     // the content area
     innerRect.setTop(innerRect.top() + headerHeight );
     innerRect.setBottom(innerRect.bottom() - footerHeight );
     QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );     // whole document
     QRect currentRect = QRect(QPoint(0,0), innerRect.size());                  // content area
 
-    // This is a test : commenting this will cut characters of content +++
-    QSize size( printer->pageRect().size() );
-    size.setHeight( size.height() - headerHeight - footerHeight );
-    d->m_Content.setPageSize(size);
-    // End of test
+    qWarning() << "contentRect" << contentRect;
 
     QPainter painter(printer);
-    int count = 0;
+    int pageNumber = 0;
     painter.save();
     painter.translate(0, headerHeight); // go under the header
     while (currentRect.intersects(contentRect)) {
+
+        qWarning() << "currentRect" << currentRect;
+
         painter.drawRect( currentRect );
 //        painter.drawRect( contentRect );
         d->m_Content.drawContents(&painter, currentRect);
-        count++;
+        pageNumber++;
         currentRect.translate(0, currentRect.height());
         painter.restore();  // return to the beginning of the page
 
@@ -195,11 +200,12 @@ bool QPrinterEasy::print( QPrinter *printer )
         QRectF footRect = QRectF(QPoint(0,printer->pageRect().bottom() - footerHeight), d->m_Footer.size() );
         painter.drawRect( footRect );
         d->m_Footer.drawContents(&painter, footRect);
-//        painter.drawText(10, printer->pageRect().bottom() - footerHeight, QString("Footer %1").arg(count));
+//        painter.drawText(10, printer->pageRect().bottom() - footerHeight, QString("Footer %1").arg(pageNumber));
 
         // calculate new page
         painter.save();
-        painter.translate(0, -currentRect.height() * count + headerHeight);
+        painter.translate(0, -currentRect.height() * pageNumber + headerHeight);
+
         if (currentRect.intersects(contentRect))
             printer->newPage();
     }
