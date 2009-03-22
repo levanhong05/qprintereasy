@@ -119,6 +119,7 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
     if (!d->m_Printer)
         return false;
 
+    // For test
     QDialog dial;
     QGridLayout g(&dial);
     QTextBrowser t(&dial);
@@ -141,6 +142,7 @@ bool QPrinterEasy::previewDialog( QWidget *parent)
      connect(buttonBox, SIGNAL(rejected()), &dial, SLOT(reject()));
     g.addWidget( buttonBox );
     dial.exec();
+    // end of test
 
     QPrintPreviewDialog dialog(d->m_Printer, parent);
     connect( &dialog, SIGNAL(paintRequested(QPrinter *)), this, SLOT(print(QPrinter *)) );
@@ -159,15 +161,13 @@ bool QPrinterEasy::print( QPrinter *printer )
     int headerHeight = d->m_Header.size().height();
     int footerHeight = d->m_Footer.size().height();
 
-    qWarning() << "heigth : head" << headerHeight << "foot" << footerHeight;
-
     QRect innerRect = printer->pageRect(); // the content area
     innerRect.setTop(innerRect.top() + headerHeight );
     innerRect.setBottom(innerRect.bottom() - footerHeight );
     QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );     // whole page
     QRect currentRect = QRect(QPoint(0,0), innerRect.size());                  // content area for a page
 
-    // This is a test
+    // This is a test : commenting this will cut characters of content +++
     QSize size( printer->pageRect().size() );
     size.setHeight( size.height() - headerHeight - footerHeight );
     d->m_Content.setPageSize(size);
@@ -183,11 +183,10 @@ bool QPrinterEasy::print( QPrinter *printer )
         d->m_Content.drawContents(&painter, currentRect);
         count++;
         currentRect.translate(0, currentRect.height());
-        painter.restore();  // return to the beginning of the painter
+        painter.restore();  // return to the beginning of the page
 
         // draw header
         QRectF headRect = QRectF(QPoint(0,0), d->m_Header.size() );
-        qWarning() << headRect;
         painter.drawRect( headRect );
         d->m_Header.drawContents(&painter, headRect );
 //        painter.drawText(10, 10, d->m_Header.toHtml() );
