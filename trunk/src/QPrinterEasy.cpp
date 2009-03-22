@@ -123,17 +123,40 @@ bool QPrinterEasy::print( QPrinter *printer )
     if (!printer)
         printer = d->m_Printer;
 
-    // draw elements to printer
-    QRect innerRect = printer->pageRect();
-    innerRect.setTop(innerRect.top() + 20);
-    innerRect.setBottom(innerRect.bottom() - 30);
-    QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize());
+    // prepare drawing areas
+    QRect innerRect = printer->pageRect(); // the content area
+    innerRect.setTop(innerRect.top() + d->m_Header.size().height() );
+    innerRect.setBottom(innerRect.bottom() - d->m_Footer.size().height() );
+    QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );
     QRect currentRect = QRect(QPoint(0,0), innerRect.size());
+
+    // This is a test
+    QSize size( printer->pageRect().size() );
+    size.setHeight( size.height() - d->m_Header.pageSize().height() - d->m_Footer.pageSize().height() );
+    d->m_Content.setPageSize(size);
+    // End of test
+
     QPainter painter(printer);
     int count = 0;
     painter.save();
+    painter.translate(0, 30);
+    while (currentRect.intersects(contentRect)) {
+        d->m_Content.drawContents(&painter, currentRect);
+        count++;
+        currentRect.translate(0, currentRect.height());
+        painter.restore();
+//        d->m_Header.drawContents(&painter, currentRect );
+        painter.drawText(10, 10, d->m_Header.toHtml() );
+//        d->m_Footer.drawContents(&painter, contentRect);
+        painter.drawText(10, printer->pageRect().bottom() - 10, QString("Footer %1").arg(count));
+        painter.save();
+        painter.translate(0, -currentRect.height() * count + 30);
+        if (currentRect.intersects(contentRect))
+            printer->newPage();
+    }
+    painter.restore();
+    painter.end();
 
-    // C'est ici qu'on dessine dans le PAINTER
 
     return true;
 }
