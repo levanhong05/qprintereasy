@@ -156,15 +156,17 @@ bool QPrinterEasy::print( QPrinter *printer )
         printer = d->m_Printer;
 
     // This is a test : commenting this will cut characters of content +++
-    int pageWidth = d->m_Printer->pageRect().width(); //TODO add margins
+    int pageWidth = d->m_Printer->pageRect().width() - 20; //TODO add margins
     d->m_Header.setTextWidth( pageWidth );
     d->m_Footer.setTextWidth( pageWidth );
     int headerHeight = d->m_Header.size().height();
     int footerHeight = d->m_Footer.size().height();
     QSize size;
-    size.setHeight( size.height() - headerHeight - footerHeight );
+    size.setHeight( printer->pageRect().height() - headerHeight - footerHeight );
     size.setWidth( pageWidth );
     d->m_Content.setPageSize(size);
+    d->m_Content.setUseDesignMetrics(true);
+//    qWarning() << d->m_Content.pageSize();
     // End of test
 
     // prepare drawing areas
@@ -174,7 +176,7 @@ bool QPrinterEasy::print( QPrinter *printer )
     QRect contentRect = QRect(QPoint(0,0), d->m_Content.size().toSize() );     // whole document
     QRect currentRect = QRect(QPoint(0,0), innerRect.size());                  // content area
 
-    qWarning() << "contentRect" << contentRect;
+//    qWarning() << "contentRect" << contentRect;
 
     QPainter painter(printer);
     int pageNumber = 0;
@@ -182,9 +184,9 @@ bool QPrinterEasy::print( QPrinter *printer )
     painter.translate(0, headerHeight); // go under the header
     while (currentRect.intersects(contentRect)) {
 
-        qWarning() << "currentRect" << currentRect;
+//        qWarning() << "currentRect" << currentRect;
 
-        painter.drawRect( currentRect );
+//        painter.drawRect( currentRect );
 //        painter.drawRect( contentRect );
         d->m_Content.drawContents(&painter, currentRect);
         pageNumber++;
@@ -194,19 +196,14 @@ bool QPrinterEasy::print( QPrinter *printer )
         // draw header
         QRectF headRect = QRectF(QPoint(0,0), d->m_Header.size() );//textWidth(), d->m_Header.size().height() );
         painter.drawRect( headRect );
-//        qWarning() << "headRect" << headRect;
         d->m_Header.drawContents(&painter, headRect );
-//        painter.drawText(10, 10, d->m_Header.toHtml() );
 
         // draw footer
         painter.save();
         painter.translate(0,printer->pageRect().bottom() - footerHeight - 10);
         QRectF footRect = QRectF(QPoint(0,0), d->m_Footer.size() );
         painter.drawRect( footRect );
-//        qWarning() << "footRect" << footRect;
-//        painter.fillRect( footRect, QBrush( QColor(255,10,10) ) );
         d->m_Footer.drawContents(&painter, footRect);
-//        painter.drawText( footRect, Qt::AlignCenter, d->m_Footer.toHtml());//QString("Footer %1").arg(pageNumber));
         painter.restore();
 
         // calculate new page
