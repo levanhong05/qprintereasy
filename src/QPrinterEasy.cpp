@@ -194,14 +194,20 @@ bool QPrinterEasy::print( QPrinter *printer )
         // draw header
         QRectF headRect = QRectF(QPoint(0,0), d->m_Header.size() );//textWidth(), d->m_Header.size().height() );
         painter.drawRect( headRect );
+//        qWarning() << "headRect" << headRect;
         d->m_Header.drawContents(&painter, headRect );
 //        painter.drawText(10, 10, d->m_Header.toHtml() );
 
         // draw footer
-        QRectF footRect = QRectF(QPoint(0,printer->pageRect().bottom() - footerHeight), d->m_Footer.size() );
+        painter.save();
+        painter.translate(0,printer->pageRect().bottom() - footerHeight - 10);
+        QRectF footRect = QRectF(QPoint(0,0), d->m_Footer.size() );
         painter.drawRect( footRect );
+//        qWarning() << "footRect" << footRect;
+//        painter.fillRect( footRect, QBrush( QColor(255,10,10) ) );
         d->m_Footer.drawContents(&painter, footRect);
-//        painter.drawText(10, printer->pageRect().bottom() - footerHeight, QString("Footer %1").arg(pageNumber));
+//        painter.drawText( footRect, Qt::AlignCenter, d->m_Footer.toHtml());//QString("Footer %1").arg(pageNumber));
+        painter.restore();
 
         // calculate new page
         painter.save();
