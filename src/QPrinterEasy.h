@@ -40,13 +40,13 @@ class QPrinterEasyPrivate;
 #include <QTextDocument>
 #include <QPrinter>
 
-class Q_EXPORT QPrinterEasy : public QObject
+class Q_QPRINTEREASY_EXPORT QPrinterEasy : public QObject
 {
     Q_OBJECT
 public:
     /** \brief This enum is used to define the presence of headers, footers, watermarks */
     enum Presence {
-        OnEachPages,
+        OnEachPages   = 0,
         FirstPageOnly,
         SecondPageOnly,
         OnePageOnly             // must set the page number
