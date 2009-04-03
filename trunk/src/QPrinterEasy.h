@@ -57,10 +57,10 @@ public:
 
     bool askForPrinter( QWidget *parent = 0 );
     bool useDefaultPrinter();
-    bool previewDialog( QWidget *parent = 0 );
+    bool previewDialog( QWidget *parent = 0, bool test = false );
 
-    void setHeader( const QString & html, Presence p = OnEachPages );
-    void setFooter( const QString & html, Presence p = OnEachPages );
+    void setHeader( const QString & html, const Presence p = OnEachPages );
+    void setFooter( const QString & html, const Presence p = OnEachPages );
     void setContent( const QString & html );
 
     void addWatermark( const QPixmap & pix,

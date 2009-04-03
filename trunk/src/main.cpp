@@ -69,12 +69,21 @@ int main(int argc, char *argv[])
         f.close();
     }
 
-    QTextDocument td(document);
-    qWarning() << "document blockCount" << td.blockCount();
-
+//    QTextDocument td(document);
+//    qWarning() << "document blockCount" << td.blockCount();
+//    QTextBlock block = td.begin();
+//    while (block.isValid()) {
+//        // warn boundingrect
+//        qWarning() << td.documentLayout()->blockBoundingRect(block);//block.layout()->boundingRect();
+//        // warn pos into doc ?
+////        qWarning() << td.documentLayout()->
+//        // next block
+//        block = block.next();
+//    }
+//
     QPrinterEasy pe;
     pe.askForPrinter();
-    pe.setHeader( header );
+    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
     pe.setFooter( footer );
     pe.setContent( document );
     pe.previewDialog();
