@@ -183,12 +183,14 @@ bool QPrinterEasyPrivate::complexDraw()
     // 'footer' the footer, see m_FooterPresence to know when to add the footer
 
     // This function draw the content block by block
+    // These values do not change during the printing process of blocks
     int pageWidth = m_Printer->pageRect().width() - 20;                     //TODO add margins
     m_Header.setTextWidth( pageWidth );
     m_Footer.setTextWidth( pageWidth );
     m_Content.setTextWidth( pageWidth );
 
-    int headerHeight, footerHeight;
+    // These values change during the printing process of blocks
+    int pageHeight, headerHeight, footerHeight;
 
 //    TODO use iterators
 //    QTextBlock::Iterator it = m_Content.begin().begin();
@@ -196,13 +198,22 @@ bool QPrinterEasyPrivate::complexDraw()
 
     int i = 0;
     int page = 1;
+    bool newPage = true;
     QTextBlock block = m_Content.begin();
     while (block.isValid()) {
-        // new page ?
-        // do we have to include the header ?
-        headerHeight = m_Header.size().height();
-        // do we have to include the footer ?
-        footerHeight = m_Footer.size().height();
+        if ( newPage ) {
+            // do we have to include the header ?
+            headerHeight = m_Header.size().height();
+            // do we have to include the footer ?
+            footerHeight = m_Footer.size().height();
+            // recalculate the content height of the page
+            pageHeight = m_Printer->pageRect().height() - headerHeight - footerHeight;
+            // do we have to create a newpage into printer ?
+            if ( page != 1 )
+                m_Printer->newPage();
+            newPage = false;
+            ++page;
+        }
 
         // warn boundingrect
         qWarning() << m_Content.documentLayout()->blockBoundingRect(block);//block.layout()->boundingRect();
