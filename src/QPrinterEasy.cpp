@@ -41,6 +41,8 @@
 #include <QTextBlock>
 #include <QAbstractTextDocumentLayout>
 #include <QTextLayout>
+#include <QTextFrame>
+#include <QTextTable>
 
 // For test
 #include <QTextBrowser>
@@ -56,6 +58,14 @@ class QPrinterEasyPrivate
 public:
     bool simpleDraw();
     bool complexDraw();
+
+    // used by complexDraw()
+    // creates a new page into the painter, recalculates all sizes and return the pageNumber of the created one.
+    // all its params will be modified
+    int complexDrawNewPage( QPainter *p, QSizeF & headerSize, QSizeF & footerSize,
+                            QSizeF & pageSize, QSizeF & actualRect, QRectF & drawnedRect,
+                            const int currentPageNumber );
+
 
 public:
     QPrinterEasyPrivate() : m_Watermark(0), m_Printer(0) {}
@@ -88,14 +98,14 @@ QPrinterEasy::~QPrinterEasy()
 
 bool QPrinterEasy::askForPrinter( QWidget *parent )
 {
-     if ( d->m_Printer )
-         delete d->m_Printer;
-     d->m_Printer = new QPrinter();
-     QPrintDialog *dialog = new QPrintDialog(d->m_Printer, parent);
-     dialog->setWindowTitle(tr("Print Document"));
-     if (dialog->exec() != QDialog::Accepted)
-         return true;
-     return false;
+    if ( d->m_Printer )
+        delete d->m_Printer;
+    d->m_Printer = new QPrinter();
+    QPrintDialog *dialog = new QPrintDialog(d->m_Printer, parent);
+    dialog->setWindowTitle(tr("Print Document"));
+    if (dialog->exec() != QDialog::Accepted)
+        return true;
+    return false;
 }
 
 void QPrinterEasy::setHeader( const QString & html, const Presence p )
@@ -179,6 +189,7 @@ bool QPrinterEasyPrivate::complexDraw()
 {
     qWarning() << "complexDraw";
     QPainter painter(m_Printer);
+    QTextFrame *frame = m_Content.rootFrame();
 
     // Here we have to print different documents :
     // 'content' is the main document to print
@@ -193,123 +204,118 @@ bool QPrinterEasyPrivate::complexDraw()
     m_Content.setTextWidth( pageWidth );
 
     // These values change during the printing process of blocks
-    int pageHeight, headerHeight, footerHeight;
-
-//    TODO use iterators
-//    QTextBlock::Iterator it = m_Content.begin().begin();
-//    QTextBlock::Iterator lastBlock = m_Content.lastBlock().end();
-
+    QSizeF pageSize, headerSize, footerSize, blockSize, actualSize;
+    QRectF drawnedRect, blockRect;
     int i = 0;
     int actualHeight = 0;
     int pageNumber = 1;
     bool newPage = true;
-    QTextBlock block = m_Content.begin();
-    QRectF blockRect;
+
+    QTextBlock block;
     painter.save();
-    while (block.isValid()) {
-        if ( (i%15) == 0 ) {
-            // do we have to include the header ?
-            if ( ( m_HeaderPresence == QPrinterEasy::OnEachPages ) ||
-                ( m_HeaderPresence == QPrinterEasy::FirstPageOnly && pageNumber == 1 ) ||
-                ( m_HeaderPresence == QPrinterEasy::SecondPageOnly && pageNumber == 2 ))
-                headerHeight = m_Header.size().height();
-            else
-                headerHeight = 0;
 
-            // do we have to include the footer ?
-            if ( ( m_FooterPresence == QPrinterEasy::OnEachPages ) ||
-                ( m_FooterPresence == QPrinterEasy::FirstPageOnly && pageNumber == 1 ) ||
-                ( m_FooterPresence == QPrinterEasy::SecondPageOnly && pageNumber == 2 ))
-                footerHeight = m_Footer.size().height();
-            else
-                footerHeight = 0;
+    QTextFrame::iterator it;
+    for (it = frame->begin(); !(it.atEnd()); ++it) {
 
-            // recalculate the content height of the page
-            pageHeight = m_Printer->pageRect().height() - headerHeight - footerHeight;
-            // do we have to create a newpage into printer ?
-            if ( pageNumber != 1 ) {
-                m_Printer->newPage();
-                painter.restore();
-                painter.translate( 0, -actualHeight );
-                painter.save();
+        QTextFrame *childFrame = it.currentFrame();
+        block = it.currentBlock();
+
+        if (childFrame) {
+            QTextTable *table = qobject_cast<QTextTable*>(childFrame);
+
+            if (table) {
+                qWarning() << "--> drawTable"<< childFrame->format().toFrameFormat().height();
+
+                // calculate table height
+                int tableHeight = m_Content.documentLayout()->frameBoundingRect(childFrame).height();
+
+                // table fits on current page ? or new page ?
+                if ( tableHeight + drawnedRect.height() > pageSize.height() )
+                    pageNumber = complexDrawNewPage( &painter, headerSize, footerSize, pageSize,
+                                                     actualSize, drawnedRect, pageNumber );
+
+                qWarning() << "    --> Table rect" << m_Content.documentLayout()->frameBoundingRect(childFrame);
+                // get position of the table into the painter
+                // draw all frames/blocks of the table
             }
-            newPage = false;
-            ++pageNumber;
+
+        }
+
+        //            else
+        //                processFrame(frameElement, childFrame);
+        //
+        //        } else if (childBlock.isValid())
+        //            processBlock(frameElement, childBlock);
+
+        if ( (i%15) == 0 ) {
+            pageNumber = complexDrawNewPage( &painter, headerSize, footerSize, pageSize,
+                                             actualSize, drawnedRect, pageNumber );
         } // end newPage
 
-        // warn boundingrect
-        blockRect = m_Content.documentLayout()->blockBoundingRect(block);
+        if ( block.isValid() ) {
+            // warn boundingrect
+            blockRect = m_Content.documentLayout()->blockBoundingRect(block);
 
-//        painter.restore();
-//        painter.translate( blockRect.x(), blockRect.y() );
-        painter.drawRect( blockRect );
-        block.layout()->draw( &painter, QPointF(0,0) );
-//        block.layout()->draw( &painter, QPointF(blockRect.x(), blockRect.y()) );//,
-//                              QVector<QTextLayout::FormatRange> (), blockRect);
-        actualHeight += blockRect.height();
-        qWarning() << blockRect << block.text().left(50);
-        qWarning() << block.layout()->boundingRect() << QPointF(blockRect.x(), blockRect.y()) << actualHeight;
+            //        painter.restore();
+            //        painter.translate( blockRect.x(), blockRect.y() );
+            painter.drawRect( blockRect );
+            block.layout()->draw( &painter, QPointF(0,0) );
+            //        block.layout()->draw( &painter, QPointF(blockRect.x(), blockRect.y()) );//,
+            //                              QVector<QTextLayout::FormatRange> (), blockRect);
+            actualHeight += blockRect.height();
+            //            qWarning() << blockRect << block.text().left(50);
+            //            qWarning() << block.layout()->boundingRect() << block.layout()->position();
+            //            qWarning() << QPointF(blockRect.x(), blockRect.y()) << actualHeight;
 
-        // next block
-        block = block.next();
-        ++i;
-//        if (i == 15) break;
+            // next block
+            block = block.next();
+            ++i;
+            //        if (i == 15) break;
+        }
     }
 
-//    qWarning() << m_Content.blockCount() << i;
-//
-//    // Need to be recalculated for each pages
-//    // headerHeight, footerHeight, innerRect, currentRect, contentRect
-//    QSize size;
-//    size.setHeight( m_Printer->pageRect().height() - headerHeight - footerHeight );
-//    size.setWidth( pageWidth );
-//    m_Content.setPageSize(size);
-//    m_Content.setUseDesignMetrics(true);
-//
-//    // prepare drawing areas
-//    QRect innerRect = m_Printer->pageRect();                                     // the content area
-//    innerRect.setTop(innerRect.top() + headerHeight );
-//    innerRect.setBottom(innerRect.bottom() - footerHeight );
-//    QRect currentRect = QRect(QPoint(0,0), innerRect.size());                  // content area
-//    QRect contentRect = QRect(QPoint(0,0), m_Content.size().toSize() );     // whole document drawing rectangle
-//
-//    int pageNumber = 0;
-//
-//    // moving into Painter : go under the header
-//    painter.save();
-//    painter.translate(0, headerHeight);
-//    while (currentRect.intersects(contentRect)) {
-//        // draw content for this page
-//        m_Content.drawContents(&painter, currentRect);
-//        pageNumber++;
-//        currentRect.translate(0, currentRect.height());
-//        // moving into Painter : return to the beginning of the page
-//        painter.restore();
-//
-//        // draw header
-//        QRectF headRect = QRectF(QPoint(0,0), m_Header.size() );
-////        painter.drawRect( headRect );
-//        m_Header.drawContents(&painter, headRect );
-//
-//        // draw footer
-//        painter.save();
-//        painter.translate(0, m_Printer->pageRect().bottom() - footerHeight - 10);
-//        QRectF footRect = QRectF(QPoint(0,0), m_Footer.size() );
-////        painter.drawRect( footRect );
-//        m_Footer.drawContents(&painter, footRect);
-//        painter.restore();
-//
-//        // calculate new page
-//        painter.save();
-//        painter.translate(0, -currentRect.height() * pageNumber + headerHeight);
-//
-//        if (currentRect.intersects(contentRect))
-//            m_Printer->newPage();
-//    }
-//    painter.restore();
+    painter.restore();
     painter.end();
 
     return true;
+}
+
+int QPrinterEasyPrivate::complexDrawNewPage( QPainter *p, QSizeF & headerSize, QSizeF & footerSize,
+                                             QSizeF & pageSize, QSizeF & actualSize, QRectF & drawnedRect,
+                                             const int currentPageNumber )
+{
+    // do we have to include the header ?
+    if ( ( m_HeaderPresence == QPrinterEasy::OnEachPages ) ||
+         ( m_HeaderPresence == QPrinterEasy::FirstPageOnly && currentPageNumber == 1 ) ||
+         ( m_HeaderPresence == QPrinterEasy::SecondPageOnly && currentPageNumber == 2 ))
+        headerSize = m_Header.size();
+    else
+        headerSize = QSizeF(0,0);
+
+    // do we have to include the footer ?
+    if ( ( m_FooterPresence == QPrinterEasy::OnEachPages ) ||
+         ( m_FooterPresence == QPrinterEasy::FirstPageOnly && currentPageNumber == 1 ) ||
+         ( m_FooterPresence == QPrinterEasy::SecondPageOnly && currentPageNumber == 2 ))
+        footerSize = m_Footer.size();
+    else
+        footerSize = QSizeF(0,0);
+
+    // recalculate the content size of the content page
+    pageSize = QSizeF( m_Printer->pageRect().width(),
+                       m_Printer->pageRect().height() - headerSize.height() - footerSize.height());
+
+    // reset drawnedSize (nothing is drawned into the new page)
+    drawnedRect = QRectF(0,0,0,0);
+
+    // do we have to create a newpage into printer ?
+    if ( currentPageNumber != 1 ) {
+        m_Printer->newPage();
+        p->restore();
+        p->translate( 0, -actualSize.height() );  // TODO <--- this is totally wrong
+        p->save();
+        return currentPageNumber + 1;
+    }
+    return currentPageNumber;
 }
 
 
@@ -355,14 +361,14 @@ bool QPrinterEasyPrivate::simpleDraw()
 
         // draw header
         QRectF headRect = QRectF(QPoint(0,0), m_Header.size() );
-//        painter.drawRect( headRect );
+        //        painter.drawRect( headRect );
         m_Header.drawContents(&painter, headRect );
 
         // draw footer
         painter.save();
         painter.translate(0,m_Printer->pageRect().bottom() - footerHeight - 10);
         QRectF footRect = QRectF(QPoint(0,0), m_Footer.size() );
-//        painter.drawRect( footRect );
+        //        painter.drawRect( footRect );
         m_Footer.drawContents(&painter, footRect);
         painter.restore();
 
