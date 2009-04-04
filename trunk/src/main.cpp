@@ -28,42 +28,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS  *
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                   *
  **********************************************************************************/
-#include "QPrinterEasy.h"
 
-#include <QtGui>
 #include <QFile>
 #include <QApplication>
+#include <QDir>
+#include <QtDebug>
+#include <QTextFrame>
 
+#include "QPrinterEasy.h"
+
+QByteArray readEntireFile(const QString &fileName)
+{
+	QFile f(fileName);
+	if (f.open(QIODevice::ReadOnly))
+		return f.readAll();
+
+	qCritical("Error in loading %s", qPrintable(fileName));
+	return QByteArray();
+}
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QString header;
-    QString footer;
-    QString document;
-    QString path = app.applicationDirPath() + "/";
-
-    {
-        QFile f( path + "header.html");
-        f.open(QIODevice::ReadOnly);
-        header = f.readAll();
-        f.close();
-    }
-
-    {
-        QFile f(path + "footer.html");
-        f.open(QIODevice::ReadOnly);
-        footer = f.readAll();
-        f.close();
-    }
-
-    {
-        QFile f(path + "document.html");
-        f.open(QIODevice::ReadOnly);
-        document = QString::fromUtf8( f.readAll() );
-        f.close();
-    }
+	QDir dir(app.applicationDirPath());
+    QString header = readEntireFile(dir.filePath("header.html"));
+    QString footer = readEntireFile(dir.filePath("footer.html"));
+    QString document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
 
     QTextDocument td(document);
     qWarning() << "document blockCount" << td.blockCount();
