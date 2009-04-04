@@ -69,8 +69,16 @@ int main(int argc, char *argv[])
         f.close();
     }
 
-//    QTextDocument td(document);
-//    qWarning() << "document blockCount" << td.blockCount();
+    QTextDocument td(document);
+    qWarning() << "document blockCount" << td.blockCount();
+
+    QTextFrame::iterator it;
+    int i = 0;
+    for (it = td.rootFrame()->begin(); !(it.atEnd()); ++it) {
+        ++i;
+    }
+    qWarning() << "document frameCount" << i;
+
 //    QTextBlock block = td.begin();
 //    while (block.isValid()) {
 //        // warn boundingrect
