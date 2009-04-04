@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     {
         QFile f(path + "document.html");
         f.open(QIODevice::ReadOnly);
-        document = f.readAll();
+        document = QString::fromUtf8( f.readAll() );
         f.close();
     }
 
