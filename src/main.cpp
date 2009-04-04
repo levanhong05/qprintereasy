@@ -42,11 +42,7 @@ int main(int argc, char *argv[])
     QString header;
     QString footer;
     QString document;
-#ifdef Q_OS_MAC
-    QString path = app.applicationDirPath() + "/../../../";
-#else
     QString path = app.applicationDirPath() + "/";
-#endif
 
     {
         QFile f( path + "header.html");
@@ -79,16 +75,6 @@ int main(int argc, char *argv[])
     }
     qWarning() << "document frameCount" << i;
 
-//    QTextBlock block = td.begin();
-//    while (block.isValid()) {
-//        // warn boundingrect
-//        qWarning() << td.documentLayout()->blockBoundingRect(block);//block.layout()->boundingRect();
-//        // warn pos into doc ?
-////        qWarning() << td.documentLayout()->
-//        // next block
-//        block = block.next();
-//    }
-//
     QPrinterEasy pe;
     pe.askForPrinter();
     pe.setHeader( header, QPrinterEasy::FirstPageOnly );
