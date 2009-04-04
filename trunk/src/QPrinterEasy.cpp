@@ -240,8 +240,8 @@ bool QPrinterEasyPrivate::complexDraw()
         // warn boundingrect
         blockRect = m_Content.documentLayout()->blockBoundingRect(block);
 
-        painter.restore();
-        painter.translate( blockRect.x(), blockRect.y() );
+//        painter.restore();
+//        painter.translate( blockRect.x(), blockRect.y() );
         painter.drawRect( blockRect );
         block.layout()->draw( &painter, QPointF(0,0) );
 //        block.layout()->draw( &painter, QPointF(blockRect.x(), blockRect.y()) );//,
