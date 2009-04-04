@@ -237,6 +237,7 @@ bool QPrinterEasyPrivate::complexDraw()
                 qWarning() << "    --> Table rect" << m_Content.documentLayout()->frameBoundingRect(childFrame);
                 // get position of the table into the painter
                 // draw all frames/blocks of the table
+                // modify drawnedRect / actualRect...
             }
 
         }
