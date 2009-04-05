@@ -46,26 +46,40 @@ class Q_QPRINTEREASY_EXPORT QPrinterEasy : public QObject
 public:
     /** \brief This enum is used to define the presence of headers, footers, watermarks */
     enum Presence {
-        OnEachPages   = 0,
+        EachPages = 0,
         FirstPageOnly,
         SecondPageOnly,
-        OnePageOnly             // must set the page number
+		LastPageOnly
     };
 
-    QPrinterEasy( QObject * parent = 0);
+    QPrinterEasy( QObject * parent = 0 );
     ~QPrinterEasy();
 
     bool askForPrinter( QWidget *parent = 0 );
     bool useDefaultPrinter();
     bool previewDialog( QWidget *parent = 0, bool test = false );
 
-    void setHeader( const QString & html, const Presence p = OnEachPages );
-    void setFooter( const QString & html, const Presence p = OnEachPages );
+	/** \brief Set a header for a special page */
+    void setHeader( const QString & html, Presence p = EachPages );
+
+	/** \brief Set a header for a particular page
+	 * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
+	 */
+	void setHeader( const QString & html, int pageNumber );
+
+	/** \brief Set a footer for a special page */
+    void setFooter( const QString & html, Presence p = EachPages );
+
+	/** \brief Set a footer for a particular page
+	 * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
+	 */
+	void setFooter( const QString & html, int pageNumber );
+
     void setContent( const QString & html );
 
     void addWatermark( const QPixmap & pix,
-                       Presence p = OnEachPages,
-                       Qt::AlignmentFlag alignement = Qt::AlignCenter)   {}
+                       Presence p = EachPages,
+                       Qt::AlignmentFlag alignement = Qt::AlignCenter);
 
     bool print( const QTextDocument & docToPrint );
 
