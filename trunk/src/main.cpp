@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
 
 	QDir dir(app.applicationDirPath());
     QString header = readEntireFile(dir.filePath("header.html"));
+    QString header2 = readEntireFile(dir.filePath("header_2.html"));
     QString footer = readEntireFile(dir.filePath("footer.html"));
     QString document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
 
@@ -67,11 +68,15 @@ int main(int argc, char *argv[])
     qWarning() << "document frameCount" << i;
 
     QPrinterEasy pe;
+    // for test
     pe.askForPrinter();
-    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
-    pe.setFooter( footer, QPrinterEasy::SecondPageOnly );
-    pe.setContent( document );
-    pe.previewDialog();
+    pe.addWatermarkText( "WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST ", QFont() );
+    // end test
+
+//    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
+//    pe.setFooter( footer, QPrinterEasy::SecondPageOnly );
+//    pe.setContent( document );
+//    pe.previewDialog();
 
     return 0;
 }
