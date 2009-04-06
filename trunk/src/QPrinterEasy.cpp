@@ -92,7 +92,7 @@ public:
                             int currentPageNumber );
 
     // Used by Watermark
-    QRectF rotatedBoundingRect(const QRectF &rect, int rotation);
+    static QRectF rotatedBoundingRect(const QRectF &rect, int rotation);
 
 
 public:

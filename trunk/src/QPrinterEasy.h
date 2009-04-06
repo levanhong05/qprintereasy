@@ -77,10 +77,14 @@ public:
 
     void setContent( const QString & html );
 
+
+    // Watermark management
     void addWatermarkPixmap( const QPixmap & pix,
                              const Presence p = EachPages,
                              const Qt::AlignmentFlag alignement = Qt::AlignCenter);
-    void addWatermarkText( const QString & plainText, const QFont & font = QFont( "Hevetica", 36 ),
+
+    void addWatermarkText( const QString & plainText,
+                           const QFont & font = QFont( "Hevetica", 36 ),
                            const Presence p = EachPages,
                            const Qt::AlignmentFlag alignement = Qt::AlignCenter,
                            const int orientation = -45 );
