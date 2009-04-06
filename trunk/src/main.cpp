@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     QPrinterEasy pe;
     pe.askForPrinter();
     pe.setHeader( header, QPrinterEasy::FirstPageOnly );
-    pe.setFooter( footer );
+    pe.setFooter( footer, QPrinterEasy::SecondPageOnly );
     pe.setContent( document );
     pe.previewDialog();
 

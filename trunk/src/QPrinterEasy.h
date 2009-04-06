@@ -77,9 +77,13 @@ public:
 
     void setContent( const QString & html );
 
-    void addWatermark( const QPixmap & pix,
-                       Presence p = EachPages,
-                       Qt::AlignmentFlag alignement = Qt::AlignCenter);
+    void addWatermarkPixmap( const QPixmap & pix,
+                             const Presence p = EachPages,
+                             const Qt::AlignmentFlag alignement = Qt::AlignCenter);
+    void addWatermarkText( const QString & plainText, const QFont & font,
+                           const Presence p = EachPages,
+                           const Qt::AlignmentFlag alignement = Qt::AlignCenter,
+                           const int orientation = -45 );
 
     bool print( const QTextDocument & docToPrint );
 

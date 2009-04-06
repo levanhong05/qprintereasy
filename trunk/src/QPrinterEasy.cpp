@@ -57,30 +57,30 @@ class QPrinterEasyPrivate
 {
 public:
     QPrinterEasyPrivate()
-		: m_Printer(0),
-		  m_header(0), m_footer(0) {}
-	~QPrinterEasyPrivate();
+                : m_Printer(0),
+                m_header(0), m_footer(0) {}
+    ~QPrinterEasyPrivate();
 
-	QTextDocument &content() { return m_content; }
-	QTextDocument *header(int pageNumber); // Returns 0 if there is no header for the page
-	QTextDocument *header(QPrinterEasy::Presence p); // Returns 0 if there is no header for the presence
-	QTextDocument *footer(int pageNumber); // Returns 0 if there is no footer for the page
-	QTextDocument *footer(QPrinterEasy::Presence p); // Returns 0 if there is no footer for the presence
+    QTextDocument &content() { return m_content; }
+    QTextDocument *header(int pageNumber); // Returns 0 if there is no header for the page
+    QTextDocument *header(QPrinterEasy::Presence p); // Returns 0 if there is no header for the presence
+    QTextDocument *footer(int pageNumber); // Returns 0 if there is no footer for the page
+    QTextDocument *footer(QPrinterEasy::Presence p); // Returns 0 if there is no footer for the presence
 
     void setHeader( const QString & html, QPrinterEasy::Presence p );
-	void setHeader( const QString & html, int pageNumber );
+    void setHeader( const QString & html, int pageNumber );
 
     void setFooter( const QString & html, QPrinterEasy::Presence p );
-	void setFooter( const QString & html, int pageNumber );
+    void setFooter( const QString & html, int pageNumber );
 
-	// Affect the width in argument to all QTextDocument
-	void setTextWidth(int width);
+    // Affect the width in argument to all QTextDocument
+    void setTextWidth(int width);
 
-	// Draw all
-	bool draw();
+    // Draw all
+    bool draw();
 
-	// Destroy the current printer and recrete a brand new one
-	void renewPrinter();
+    // Destroy the current printer and recrete a brand new one
+    void renewPrinter();
 
     // used by complexDraw()
     // creates a new page into the painter, recalculates all sizes and return the pageNumber of the created one.
@@ -90,16 +90,16 @@ public:
                             int currentPageNumber );
 
 public:
-    QPixmap m_Watermark; // null watermark at constructor time
+    QPainter m_Watermark; // null watermark at constructor time
     QPrinter *m_Printer;
 
 private:
-	QTextDocument m_content;
-	QTextDocument *m_header, *m_footer;
-	QMap<int, QTextDocument*> m_pageHeaders;
-	QMap<int, QTextDocument*> m_pageFooters;
+    QTextDocument m_content;
+    QTextDocument *m_header, *m_footer;
+    QMap<int, QTextDocument*> m_pageHeaders;
+    QMap<int, QTextDocument*> m_pageFooters;
 
-	bool isSimple() const { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
+    bool isSimple() const { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
     bool simpleDraw();
     bool complexDraw();
 };
@@ -543,8 +543,21 @@ bool QPrinterEasy::print( QPrinter *printer )
 	return d->draw();
 }
 
-void QPrinterEasy::addWatermark( const QPixmap & ,
-								 Presence,
-								 Qt::AlignmentFlag)
+void QPrinterEasy::addWatermarkPixmap( const QPixmap & , const Presence, const Qt::AlignmentFlag)
 {
+}
+
+void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & font,
+                                     const Presence p,
+                                     const Qt::AlignmentFlag alignement,
+                                     const int orientation )
+{
+    QPainter painter;
+    painter.setFont( font );
+    QTextOption opt;
+    opt.setAlignment( alignement );
+    opt.setWrapMode( QTextOption::WordWrap );
+    QRectF rect(d->m_Printer->pageRect());
+    painter.rotate(orientation);
+    painter.drawText( rect, plainText, opt );
 }
