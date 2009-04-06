@@ -553,6 +553,93 @@ void QPrinterEasy::addWatermarkPixmap( const QPixmap & , const Presence, const Q
 {
 }
 
+void QPrinterEasy::addWatermarkHtml( const QString & html,
+                                     const Presence p,
+                                     const Qt::Alignment watermarkAlignment,
+                                     const int orientation )
+{
+    if ( ! d->m_Printer )
+        return;
+
+    // TODO Manage page margins +++
+
+    // get some values about the printing page and prepare the pixmap
+    QRectF pageRect = d->m_Printer->pageRect();
+    int rotationAngle = orientation;
+
+    // for test
+    pageRect.setWidth( pageRect.width() / 2 );
+    pageRect.setHeight( pageRect.height() / 2 );
+    QDialog dialog;
+    QVBoxLayout * layout = new QVBoxLayout();
+    dialog.setLayout(layout);
+    QLabel label;
+    // end test
+
+    d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
+    d->m_Watermark.fill();
+
+    QPointF pageCenter( pageRect.center() );
+
+    // Calculates the painting area for the text
+    QTextDocument wm;
+    wm.setHtml( html );
+    wm.setTextWidth( pageRect.width() );
+    QRectF textRect = QRectF( QPointF(0,0), wm.size() );
+
+    if ( ( watermarkAlignment == (Qt::AlignHCenter | Qt::AlignVCenter) ) || (watermarkAlignment == Qt::AlignCenter ) ) {
+        textRect.moveCenter( pageRect.center() );
+        // calculate the median angle of the page
+        double pi = 3.14159265;
+        double calculatedTang = pageRect.height() / pageRect.width();
+        rotationAngle = -atan( calculatedTang ) * 180.0 / pi;
+    } else if (watermarkAlignment == Qt::AlignBottom) {
+        textRect.moveTop( pageRect.bottom() - textRect.height() );
+        rotationAngle = 0;
+    } else if (watermarkAlignment == Qt::AlignTop) {
+        textRect.moveTop( pageRect.top() );
+        rotationAngle = 0;
+    } else if (watermarkAlignment == Qt::AlignRight) {
+        textRect.moveCenter( QPointF(pageRect.height() - (textRect.width()/1.5), pageRect.center().y()) );
+        rotationAngle = 90;
+    }
+
+    // Prepare painter
+    QPainter painter;
+    painter.begin( &d->m_Watermark );
+    wm.drawContents( &painter );//, textRect );
+    painter.translate( -pageRect.topLeft() );  // TODO : this is wrong because we loose the margins
+    painter.save();
+    // rotate the painter from its middle
+    if ( orientation != 0 ) {
+        painter.translate( textRect.center() );
+        painter.rotate( rotationAngle );
+        // scale textRect to feet inside the pageRect - margins
+        QRectF boundingRect = d->rotatedBoundingRect(textRect, rotationAngle);
+        double scale = qMin( pageRect.width() / boundingRect.width(), pageRect.height() / boundingRect.height() );
+        painter.scale( scale, scale );
+        painter.translate( -textRect.center() );
+    }
+    wm.drawContents( &painter);// , textRect );  // <-- TODO this doesnot work
+    painter.drawRect( textRect );
+
+    painter.restore();
+    painter.end();
+
+    // for test
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
+                                                       | QDialogButtonBox::Cancel);
+    connect(buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+    label.setPixmap( d->m_Watermark );
+    layout->addWidget(&label);
+    layout->addWidget( buttonBox );
+    // end test
+
+    dialog.exec();
+
+}
+
 void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & font,
                                      const Presence p,
                                      const Qt::Alignment watermarkAlignment,
@@ -587,22 +674,18 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
     QRectF textRect = fm.boundingRect( pageRect.toRect(), textAlignment | Qt::TextWordWrap, plainText );
 
     if ( ( watermarkAlignment == (Qt::AlignHCenter | Qt::AlignVCenter) ) || (watermarkAlignment == Qt::AlignCenter ) ) {
-        qWarning() << "AlignCenter";
         textRect.moveCenter( pageRect.center() );
         // calculate the median angle of the page
         double pi = 3.14159265;
         double calculatedTang = pageRect.height() / pageRect.width();
         rotationAngle = -atan( calculatedTang ) * 180.0 / pi;
     } else if (watermarkAlignment == Qt::AlignBottom) {
-        qWarning() << "AlignBottom";
         textRect.moveTop( pageRect.bottom() - textRect.height() );
         rotationAngle = 0;
     } else if (watermarkAlignment == Qt::AlignTop) {
-        qWarning() << "AlignTop";
         textRect.moveTop( pageRect.top() );
         rotationAngle = 0;
     } else if (watermarkAlignment == Qt::AlignRight) {
-        qWarning() << "alignRight";
         textRect.moveCenter( QPointF(pageRect.height() - (textRect.width()/1.5), pageRect.center().y()) );
         rotationAngle = 90;
     }
