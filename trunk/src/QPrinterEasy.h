@@ -92,6 +92,11 @@ public:
                            const Qt::Alignment textAlignment = Qt::AlignCenter,
                            const int orientation = -1 );
 
+    void addWatermarkHtml( const QString & html,
+                           const Presence p = EachPages,
+                           const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
+                           const int orientation = -1 );
+
     bool print( const QTextDocument & docToPrint );
 
 public Q_SLOTS:

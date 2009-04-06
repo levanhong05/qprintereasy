@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     QString header = readEntireFile(dir.filePath("header.html"));
     QString header2 = readEntireFile(dir.filePath("header_2.html"));
     QString footer = readEntireFile(dir.filePath("footer.html"));
+    QString watermark = readEntireFile(dir.filePath("watermark.html"));
     QString document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
 
     QTextDocument td(document);
@@ -70,8 +71,7 @@ int main(int argc, char *argv[])
     QPrinterEasy pe;
     // for test
     pe.askForPrinter();
-    pe.addWatermarkText( "WATERMARK",
-                         QFont("Arial", 24),
+    pe.addWatermarkHtml( watermark,
                          QPrinterEasy::EachPages,
                          Qt::AlignCenter );
     // end test
