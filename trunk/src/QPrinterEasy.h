@@ -90,7 +90,7 @@ public:
                            const Presence p = EachPages,
                            const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
                            const Qt::Alignment textAlignment = Qt::AlignCenter,
-                           const int orientation = -45 );
+                           const int orientation = -1 );
 
     bool print( const QTextDocument & docToPrint );
 

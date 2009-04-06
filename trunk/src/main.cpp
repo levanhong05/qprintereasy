@@ -70,10 +70,10 @@ int main(int argc, char *argv[])
     QPrinterEasy pe;
     // for test
     pe.askForPrinter();
-    pe.addWatermarkText( "WATERMARK TEST",
+    pe.addWatermarkText( "WATERMARK",
                          QFont("Arial", 24),
                          QPrinterEasy::EachPages,
-                         Qt::AlignRight );
+                         Qt::AlignCenter );
     // end test
 
 //    pe.setHeader( header, QPrinterEasy::FirstPageOnly );

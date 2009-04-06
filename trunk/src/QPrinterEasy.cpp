@@ -562,50 +562,57 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
     if ( ! d->m_Printer )
         return;
 
-    // get some values about the printing page
+    // TODO Manage page margins +++
+
+    // get some values about the printing page and prepare the pixmap
     QRectF pageRect = d->m_Printer->pageRect();
     int rotationAngle = orientation;
 
     // for test
     pageRect.setWidth( pageRect.width() / 2 );
     pageRect.setHeight( pageRect.height() / 2 );
-    // end test
-    QPointF pageCenter( pageRect.center() );
-
-    // for test
     QDialog dialog;
     QVBoxLayout * layout = new QVBoxLayout();
     dialog.setLayout(layout);
     QLabel label;
-    QPixmap pixmap( pageRect.width(), pageRect.height() );
-    pixmap.fill();
     // end test
+
+    d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
+    d->m_Watermark.fill();
+
+    QPointF pageCenter( pageRect.center() );
 
     // Calculates the painting area for the text
     QFontMetrics fm( font );
     QRectF textRect = fm.boundingRect( pageRect.toRect(), textAlignment | Qt::TextWordWrap, plainText );
 
-    if ( ( watermarkAlignment == Qt::AlignHCenter | Qt::AlignVCenter ) || (watermarkAlignment == Qt::AlignCenter ) )
+    if ( ( watermarkAlignment == (Qt::AlignHCenter | Qt::AlignVCenter) ) || (watermarkAlignment == Qt::AlignCenter ) ) {
+        qWarning() << "AlignCenter";
         textRect.moveCenter( pageRect.center() );
-    else if (watermarkAlignment == Qt::AlignBottom) {
+        // calculate the median angle of the page
+        double pi = 3.14159265;
+        double calculatedTang = pageRect.height() / pageRect.width();
+        rotationAngle = -atan( calculatedTang ) * 180.0 / pi;
+    } else if (watermarkAlignment == Qt::AlignBottom) {
+        qWarning() << "AlignBottom";
         textRect.moveTop( pageRect.bottom() - textRect.height() );
         rotationAngle = 0;
-    }
-    else if (watermarkAlignment == Qt::AlignTop) {
+    } else if (watermarkAlignment == Qt::AlignTop) {
+        qWarning() << "AlignTop";
         textRect.moveTop( pageRect.top() );
         rotationAngle = 0;
-    }
-    else if (watermarkAlignment == Qt::AlignRight) {
-        textRect.moveCenter( QPointF(pageRect.height() - (textRect.width()/2), pageRect.center().y()) );
+    } else if (watermarkAlignment == Qt::AlignRight) {
+        qWarning() << "alignRight";
+        textRect.moveCenter( QPointF(pageRect.height() - (textRect.width()/1.5), pageRect.center().y()) );
         rotationAngle = 90;
     }
 
     // Prepare painter
     QPainter painter;
-    painter.begin(&pixmap);
-    painter.translate( -pageRect.topLeft() );
+    painter.begin( &d->m_Watermark );
+    painter.translate( -pageRect.topLeft() );  // TODO : this is wrong because we loose the margins
     painter.save();
-    painter.setPen("gray");
+    painter.setPen( "gray" );
     painter.setFont( font );
 
     QTextOption opt;
@@ -625,17 +632,18 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
     painter.drawText( textRect, plainText, opt );
     painter.drawRect( textRect );
 
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
-                                                       | QDialogButtonBox::Cancel);
-
-    connect(buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
-    connect(buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
-    label.setPixmap( pixmap );
-    layout->addWidget(&label);
-    layout->addWidget( buttonBox );
-
     painter.restore();
     painter.end();
+
+    // for test
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
+                                                       | QDialogButtonBox::Cancel);
+    connect(buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+    label.setPixmap( d->m_Watermark );
+    layout->addWidget(&label);
+    layout->addWidget( buttonBox );
+    // end test
 
     dialog.exec();
 
