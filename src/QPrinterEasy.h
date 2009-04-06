@@ -92,6 +92,8 @@ public Q_SLOTS:
 
 private:
     QPrinterEasyPrivate *d;
+
+	static QRectF rotatedBoundingRect(const QRectF &rect, int rotation);
 };
 
 #endif // QPRINTEREASY_H

@@ -601,9 +601,8 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
         painter.translate( textRect.center() );
         painter.rotate( orientation );
         // scale textRect to feet inside the pageRect - margins
-        double neededHeight = ( textRect.height() * sin( orientation ) ) * 2.00 + textRect.height();
-        double neededWidth = ( textRect.width() * cos( orientation ) ) * 2.00  + textRect.width();
-        double scale = qMin( (neededHeight/pageRect.height()), (neededWidth/pageRect.width()) );
+		QRectF boundingRect = rotatedBoundingRect(textRect, orientation);
+		double scale = qMin( pageRect.width() / boundingRect.width(), pageRect.height() / boundingRect.height() );
         painter.scale( scale, scale );
         painter.translate( -textRect.center() );
 
@@ -633,4 +632,14 @@ qWarning() << "executing dialog";
 
     dialog.exec();
 
+}
+
+QRectF QPrinterEasy::rotatedBoundingRect(const QRectF &rect, int rotation) {
+	QRectF centeredRect = rect.translated( - rect.center() );
+	QPolygonF polygon(centeredRect);
+	QTransform transform;
+	transform.rotate(rotation);
+	polygon = polygon * transform;
+
+	return polygon.boundingRect().translated(rect.center());
 }
