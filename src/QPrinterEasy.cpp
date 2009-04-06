@@ -555,7 +555,8 @@ void QPrinterEasy::addWatermarkPixmap( const QPixmap & , const Presence, const Q
 
 void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & font,
                                      const Presence p,
-                                     const Qt::AlignmentFlag alignement,
+                                     const Qt::Alignment watermarkAlignment,
+                                     const Qt::Alignment textAlignment,
                                      const int orientation )
 {
     if ( ! d->m_Printer )
@@ -563,6 +564,8 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
 
     // get some values about the printing page
     QRectF pageRect = d->m_Printer->pageRect();
+    int rotationAngle = orientation;
+
     // for test
     pageRect.setWidth( pageRect.width() / 2 );
     pageRect.setHeight( pageRect.height() / 2 );
@@ -580,8 +583,22 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
 
     // Calculates the painting area for the text
     QFontMetrics fm( font );
-    QRectF textRect = fm.boundingRect( pageRect.toRect(), alignement | Qt::TextWordWrap, plainText );
-    textRect.moveCenter( pageRect.center() );
+    QRectF textRect = fm.boundingRect( pageRect.toRect(), textAlignment | Qt::TextWordWrap, plainText );
+
+    if ( ( watermarkAlignment == Qt::AlignHCenter | Qt::AlignVCenter ) || (watermarkAlignment == Qt::AlignCenter ) )
+        textRect.moveCenter( pageRect.center() );
+    else if (watermarkAlignment == Qt::AlignBottom) {
+        textRect.moveTop( pageRect.bottom() - textRect.height() );
+        rotationAngle = 0;
+    }
+    else if (watermarkAlignment == Qt::AlignTop) {
+        textRect.moveTop( pageRect.top() );
+        rotationAngle = 0;
+    }
+    else if (watermarkAlignment == Qt::AlignRight) {
+        textRect.moveCenter( QPointF(pageRect.height() - (textRect.width()/2), pageRect.center().y()) );
+        rotationAngle = 90;
+    }
 
     // Prepare painter
     QPainter painter;
@@ -592,15 +609,15 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
     painter.setFont( font );
 
     QTextOption opt;
-    opt.setAlignment( alignement );
+    opt.setAlignment( textAlignment );
     opt.setWrapMode( QTextOption::WordWrap );
 
     // rotate the painter from its middle
     if ( orientation != 0 ) {
         painter.translate( textRect.center() );
-        painter.rotate( orientation );
+        painter.rotate( rotationAngle );
         // scale textRect to feet inside the pageRect - margins
-        QRectF boundingRect = d->rotatedBoundingRect(textRect, orientation);
+        QRectF boundingRect = d->rotatedBoundingRect(textRect, rotationAngle);
         double scale = qMin( pageRect.width() / boundingRect.width(), pageRect.height() / boundingRect.height() );
         painter.scale( scale, scale );
         painter.translate( -textRect.center() );

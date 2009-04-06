@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-	QDir dir(app.applicationDirPath());
+    QDir dir(app.applicationDirPath());
     QString header = readEntireFile(dir.filePath("header.html"));
     QString header2 = readEntireFile(dir.filePath("header_2.html"));
     QString footer = readEntireFile(dir.filePath("footer.html"));
@@ -70,11 +70,10 @@ int main(int argc, char *argv[])
     QPrinterEasy pe;
     // for test
     pe.askForPrinter();
-    pe.addWatermarkText( "WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST WATERMARK TEST ",
+    pe.addWatermarkText( "WATERMARK TEST",
                          QFont("Arial", 24),
                          QPrinterEasy::EachPages,
-                         Qt::AlignHCenter | Qt::AlignVCenter,
-                         60 );
+                         Qt::AlignRight );
     // end test
 
 //    pe.setHeader( header, QPrinterEasy::FirstPageOnly );

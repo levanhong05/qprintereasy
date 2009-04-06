@@ -49,7 +49,9 @@ public:
         EachPages = 0,
         FirstPageOnly,
         SecondPageOnly,
-		LastPageOnly
+        LastPageOnly,
+        OddPages,  // pages impaires
+        EventPages // pages paires
     };
 
     QPrinterEasy( QObject * parent = 0 );
@@ -59,21 +61,21 @@ public:
     bool useDefaultPrinter();
     bool previewDialog( QWidget *parent = 0, bool test = false );
 
-	/** \brief Set a header for a special page */
+    /** \brief Set a header for a special page */
     void setHeader( const QString & html, Presence p = EachPages );
 
-	/** \brief Set a header for a particular page
-	 * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
-	 */
-	void setHeader( const QString & html, int pageNumber );
+    /** \brief Set a header for a particular page
+         * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
+         */
+    void setHeader( const QString & html, int pageNumber );
 
-	/** \brief Set a footer for a special page */
+    /** \brief Set a footer for a special page */
     void setFooter( const QString & html, Presence p = EachPages );
 
-	/** \brief Set a footer for a particular page
-	 * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
-	 */
-	void setFooter( const QString & html, int pageNumber );
+    /** \brief Set a footer for a particular page
+         * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
+         */
+    void setFooter( const QString & html, int pageNumber );
 
     void setContent( const QString & html );
 
@@ -86,7 +88,8 @@ public:
     void addWatermarkText( const QString & plainText,
                            const QFont & font = QFont( "Hevetica", 36 ),
                            const Presence p = EachPages,
-                           const Qt::AlignmentFlag alignement = Qt::AlignCenter,
+                           const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
+                           const Qt::Alignment textAlignment = Qt::AlignCenter,
                            const int orientation = -45 );
 
     bool print( const QTextDocument & docToPrint );
