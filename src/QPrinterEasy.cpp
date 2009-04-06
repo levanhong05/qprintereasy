@@ -41,6 +41,7 @@
 #include <QTextLayout>
 #include <QTextFrame>
 #include <QTextTable>
+#include <math.h>
 
 // For test
 #include <QTextBrowser>
@@ -48,6 +49,7 @@
 #include <QGridLayout>
 #include <QDebug>
 #include <QDialogButtonBox>
+#include <QLabel>
 // End
 
 #include "QPrinterEasy.h"
@@ -90,7 +92,7 @@ public:
                             int currentPageNumber );
 
 public:
-    QPainter m_Watermark; // null watermark at constructor time
+    QPixmap m_Watermark; // null watermark at constructor time
     QPrinter *m_Printer;
 
 private:
@@ -456,7 +458,7 @@ QPrinterEasy::~QPrinterEasy()
 
 bool QPrinterEasy::askForPrinter( QWidget *parent )
 {
-	d->renewPrinter();
+    d->renewPrinter();
     QPrintDialog *dialog = new QPrintDialog(d->m_Printer, parent);
     dialog->setWindowTitle(tr("Print Document"));
     if (dialog->exec() != QDialog::Accepted)
@@ -552,12 +554,83 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
                                      const Qt::AlignmentFlag alignement,
                                      const int orientation )
 {
+    if ( ! d->m_Printer )
+        return;
+
+    // get some values about the printing page
+    QRectF pageRect = d->m_Printer->pageRect();
+    // for test
+    pageRect.setWidth( pageRect.width() / 2 );
+    pageRect.setHeight( pageRect.height() / 2 );
+    // end test
+    QPointF pageCenter( pageRect.center() );
+
+    // for test
+    QDialog dialog;
+    QVBoxLayout * layout = new QVBoxLayout();
+    dialog.setLayout(layout);
+    QLabel label;
+    QPixmap pixmap( pageRect.width(), pageRect.height() );
+    pixmap.fill();
+    // end test
+
+    // Calculates the painting area for the text
+    QFontMetrics fm( font );
+    QRectF textRect = fm.boundingRect( pageRect.toRect(), alignement | Qt::TextWordWrap, plainText );
+    textRect.moveCenter( pageRect.center() );
+
+    qWarning() << textRect << pageRect;
+    qWarning() << textRect.center() << pageRect.center();
+
+
+    // Prepare painter
     QPainter painter;
+    painter.begin(&pixmap);
+    painter.translate( -pageRect.topLeft() );
+    painter.save();
+    painter.setPen("gray");
     painter.setFont( font );
+
     QTextOption opt;
     opt.setAlignment( alignement );
     opt.setWrapMode( QTextOption::WordWrap );
-    QRectF rect(d->m_Printer->pageRect());
-    painter.rotate(orientation);
-    painter.drawText( rect, plainText, opt );
+
+    // rotate the painter from its middle
+    if ( orientation != 0 ) {
+        painter.restore();
+        painter.translate( textRect.center() );
+        painter.rotate( orientation );
+        // scale textRect to feet inside the pageRect - margins
+        double neededHeight = ( textRect.height() * sin( orientation ) ) * 2.00 + textRect.height();
+        double neededWidth = ( textRect.width() * cos( orientation ) ) * 2.00  + textRect.width();
+        double scale = qMin( (neededHeight/pageRect.height()), (neededWidth/pageRect.width()) );
+        painter.scale( scale, scale );
+        painter.translate( -textRect.center() );
+
+        qWarning() << scale;
+
+        painter.save();
+    }
+
+    painter.drawText( textRect, plainText, opt );
+    painter.drawRect( textRect );
+    painter.drawRect( pageRect );
+
+    qWarning() << "Finishing dialog";
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
+                                                       | QDialogButtonBox::Cancel);
+
+    connect(buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+    label.setPixmap( pixmap );
+    layout->addWidget(&label);
+    layout->addWidget( buttonBox );
+qWarning() << "executing dialog";
+
+    painter.restore();
+    painter.end();
+
+    dialog.exec();
+
 }

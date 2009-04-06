@@ -80,7 +80,7 @@ public:
     void addWatermarkPixmap( const QPixmap & pix,
                              const Presence p = EachPages,
                              const Qt::AlignmentFlag alignement = Qt::AlignCenter);
-    void addWatermarkText( const QString & plainText, const QFont & font,
+    void addWatermarkText( const QString & plainText, const QFont & font = QFont( "Hevetica", 36 ),
                            const Presence p = EachPages,
                            const Qt::AlignmentFlag alignement = Qt::AlignCenter,
                            const int orientation = -45 );
