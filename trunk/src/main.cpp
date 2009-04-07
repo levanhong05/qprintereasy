@@ -71,9 +71,7 @@ int main(int argc, char *argv[])
     QPrinterEasy pe;
     // for test
     pe.askForPrinter();
-    pe.addWatermarkHtml( watermark,
-                         QPrinterEasy::EachPages,
-                         Qt::AlignCenter );
+    pe.addWatermarkText( "Trying left" , QFont( "Hevetica", 36 ), QPrinterEasy::EachPages, Qt::AlignLeft );
     // end test
 
 //    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
