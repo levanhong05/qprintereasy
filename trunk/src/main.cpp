@@ -69,15 +69,12 @@ int main(int argc, char *argv[])
     qWarning() << "document frameCount" << i;
 
     QPrinterEasy pe;
-    // for test
     pe.askForPrinter();
     pe.addWatermarkText( "Trying left" , QFont( "Hevetica", 36 ), QPrinterEasy::EachPages, Qt::AlignLeft );
-    // end test
-
-//    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
-//    pe.setFooter( footer, QPrinterEasy::SecondPageOnly );
-//    pe.setContent( document );
-//    pe.previewDialog();
+    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
+    pe.setFooter( footer, QPrinterEasy::SecondPageOnly );
+    pe.setContent( document );
+    pe.previewDialog();
 
     return 0;
 }
