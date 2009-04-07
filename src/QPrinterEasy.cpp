@@ -234,6 +234,10 @@ int QPrinterEasyPrivate::complexDrawNewPage( QPainter &p, QSizeF & headerSize, Q
         // painter points at the beginning of the page
     }
 
+    // TODO do we have to include a watermark ?
+
+
+
     // do we have to include the header ?
     QTextDocument *doc = header(currentPageNumber + 1);
     if ( doc ) {
@@ -457,15 +461,16 @@ QPrinterEasy::QPrinterEasy( QObject * parent )
 
 QPrinterEasy::~QPrinterEasy()
 {
-    delete d;
+    if (d) delete d;
+    d = 0;
 }
 
 bool QPrinterEasy::askForPrinter( QWidget *parent )
 {
     d->renewPrinter();
-    QPrintDialog *dialog = new QPrintDialog(d->m_Printer, parent);
-    dialog->setWindowTitle(tr("Print Document"));
-    if (dialog->exec() != QDialog::Accepted)
+    QPrintDialog dialog(d->m_Printer, parent);
+    dialog.setWindowTitle(tr("Print Document"));
+    if (dialog.exec() != QDialog::Accepted)
         return true;
     return false;
 }
@@ -607,7 +612,6 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
     // Prepare painter
     QPainter painter;
     painter.begin( &d->m_Watermark );
-    wm.drawContents( &painter );//, textRect );
     painter.translate( -pageRect.topLeft() );  // TODO : this is wrong because we loose the margins
     painter.save();
     // rotate the painter from its middle
@@ -620,7 +624,9 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
         painter.scale( scale, scale );
         painter.translate( -textRect.center() );
     }
-    wm.drawContents( &painter);// , textRect );  // <-- TODO this doesnot work
+    painter.translate( textRect.topLeft() );
+    wm.drawContents( &painter );//, textRect );
+    painter.translate( -textRect.topLeft() );
     painter.drawRect( textRect );
 
     painter.restore();
