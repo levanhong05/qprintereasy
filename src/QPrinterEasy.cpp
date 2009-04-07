@@ -104,6 +104,7 @@ public:
 
 public:
     QPixmap m_Watermark; // null watermark at constructor time
+    int m_WatermarkPresence;
     QPrinter *m_Printer;
 
 private:
@@ -113,9 +114,15 @@ private:
     QMap<int, QTextDocument*> m_pageFooters;
 
     bool isSimple() const { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
+    bool insertWatermark( const int page );
     bool simpleDraw();
     bool complexDraw();
 };
+
+///////////////////////////////////////////////////////////
+///////////// QPrinterEasyPrivate /////////////////////////
+///////////////////////////////////////////////////////////
+
 
 QPrinterEasyPrivate::~QPrinterEasyPrivate()
 {
@@ -241,9 +248,13 @@ int QPrinterEasyPrivate::complexDrawNewPage( QPainter &p, QSizeF & headerSize, Q
         // painter points at the beginning of the page
     }
 
-    // TODO do we have to include a watermark ?
-
-
+    // do we have to include a watermark ?
+    if ( insertWatermark(currentPageNumber+1) ) {
+        p.save();
+        p.translate(0, correctedY );
+        p.drawPixmap( m_Printer->pageRect(), m_Watermark );
+        p.restore();
+    }
 
     // do we have to include the header ?
     QTextDocument *doc = header(currentPageNumber + 1);
@@ -368,6 +379,20 @@ bool QPrinterEasyPrivate::draw() {
         return complexDraw();
 }
 
+bool QPrinterEasyPrivate::insertWatermark( const int page )
+{
+    if ( m_Watermark.isNull() )
+        return false;
+    if ( m_WatermarkPresence == QPrinterEasy::EachPages )
+        return true;
+    if ( ( m_WatermarkPresence == QPrinterEasy::OddPages ) && ((page % 2) == 1) )
+        return true;
+    if ( ( m_WatermarkPresence == QPrinterEasy::EventPages ) && ((page % 2) == 0) )
+        return true;
+    return false;
+}
+
+
 QTextDocument *QPrinterEasyPrivate::header(int pageNumber) {
     if (m_pageHeaders.find(pageNumber) == m_pageHeaders.end())
         return m_header;
@@ -452,6 +477,16 @@ void QPrinterEasyPrivate::setFooter( const QString & html, int pageNumber )
     if (!m_pageFooters[pageNumber])
         m_pageFooters[pageNumber] = new QTextDocument;
     m_pageFooters[pageNumber]->setHtml(html);
+}
+
+QRectF QPrinterEasyPrivate::rotatedBoundingRect(const QRectF &rect, int rotation)
+{
+    QRectF centeredRect = rect.translated( - rect.center() );
+    QPolygonF polygon(centeredRect);
+    QTransform transform;
+    transform.rotate(rotation);
+    polygon = polygon * transform;
+    return polygon.boundingRect().translated(rect.center());
 }
 
 ///////////////////////////////////////////////////////////
@@ -572,6 +607,7 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
 {
     if ( ! d->m_Printer )
         return;
+    d->m_WatermarkPresence = p;
 
     // TODO Manage page margins +++
 
@@ -580,12 +616,12 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
     int rotationAngle = orientation;
 
     // for test
-    pageRect.setWidth( pageRect.width() / 2 );
-    pageRect.setHeight( pageRect.height() / 2 );
-    QDialog dialog;
-    QVBoxLayout * layout = new QVBoxLayout();
-    dialog.setLayout(layout);
-    QLabel label;
+//    pageRect.setWidth( pageRect.width() / 2 );
+//    pageRect.setHeight( pageRect.height() / 2 );
+//    QDialog dialog;
+//    QVBoxLayout * layout = new QVBoxLayout();
+//    dialog.setLayout(layout);
+//    QLabel label;
     // end test
 
     d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
@@ -640,16 +676,16 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
     painter.end();
 
     // for test
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
-                                                       | QDialogButtonBox::Cancel);
-    connect(buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
-    connect(buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
-    label.setPixmap( d->m_Watermark );
-    layout->addWidget(&label);
-    layout->addWidget( buttonBox );
+//    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
+//                                                       | QDialogButtonBox::Cancel);
+//    connect(buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+//    connect(buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+//    label.setPixmap( d->m_Watermark );
+//    layout->addWidget(&label);
+//    layout->addWidget( buttonBox );
+//    dialog.exec();
     // end test
 
-    dialog.exec();
 
 }
 
@@ -661,6 +697,7 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
 {
     if ( ! d->m_Printer )
         return;
+    d->m_WatermarkPresence = p;
 
     // TODO Manage page margins +++
 
@@ -669,12 +706,12 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
     int rotationAngle = orientation;
 
     // for test
-    pageRect.setWidth( pageRect.width() / 2 );
-    pageRect.setHeight( pageRect.height() / 2 );
-    QDialog dialog;
-    QVBoxLayout * layout = new QVBoxLayout();
-    dialog.setLayout(layout);
-    QLabel label;
+//    pageRect.setWidth( pageRect.width() / 2 );
+//    pageRect.setHeight( pageRect.height() / 2 );
+//    QDialog dialog;
+//    QVBoxLayout * layout = new QVBoxLayout();
+//    dialog.setLayout(layout);
+//    QLabel label;
     // end test
 
     d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
@@ -700,7 +737,7 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
         textRect.moveCenter( QPointF(pageRect.height() - (textRect.width()/1.5), pageRect.center().y()) );
         rotationAngle = 90;
     } else if (watermarkAlignment == Qt::AlignLeft) {
-        textRect.moveCenter( QPointF( (textRect.width()/2), pageRect.center().y()) );
+        textRect.moveCenter( QPointF( (textRect.width()/2)+20, pageRect.center().y()) );
         rotationAngle = 270;
     }
 
@@ -727,31 +764,22 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
         painter.translate( -textRect.center() );
     }
     painter.drawText( textRect, plainText, opt );
-    painter.drawRect( textRect );
+//    painter.drawRect( textRect );
 
     painter.restore();
     painter.end();
 
     // for test
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
-                                                       | QDialogButtonBox::Cancel);
-    connect(buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
-    connect(buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
-    label.setPixmap( d->m_Watermark );
-    layout->addWidget(&label);
-    layout->addWidget( buttonBox );
+//    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
+//                                                       | QDialogButtonBox::Cancel);
+//    connect(buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+//    connect(buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+//    label.setPixmap( d->m_Watermark );
+//    layout->addWidget(&label);
+//    layout->addWidget( buttonBox );
+//    dialog.exec();
     // end test
 
-    dialog.exec();
 
 }
 
-QRectF QPrinterEasyPrivate::rotatedBoundingRect(const QRectF &rect, int rotation)
-{
-    QRectF centeredRect = rect.translated( - rect.center() );
-    QPolygonF polygon(centeredRect);
-    QTransform transform;
-    transform.rotate(rotation);
-    polygon = polygon * transform;
-    return polygon.boundingRect().translated(rect.center());
-}
