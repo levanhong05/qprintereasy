@@ -88,9 +88,9 @@ public:
                              const Qt::AlignmentFlag alignement = Qt::AlignCenter);
 
     void addWatermarkText( const QString & plainText,
+                           const Presence p = EachPages,
                            const QFont & font = QFont( "Hevetica", 36 ),
                            const QColor & color = QColor("lightgrey"),
-                           const Presence p = EachPages,
                            const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
                            const Qt::Alignment textAlignment = Qt::AlignCenter,
                            const int orientation = -1 );
