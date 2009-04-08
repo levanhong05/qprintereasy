@@ -75,7 +75,7 @@
 
   ==Header and footer with centered plain text Watermark on Even Pages==
 
-  * You can add centered plain text watermark on EventPages. [http://qprintereasy.googlecode.com/svn/trunk/bin/withWatermarkEventPages.pdf This is what you can get] with a few lines of code.
+  * You can add centered plain text watermark on EventPages. [http://qprintereasy.googlecode.com/svn/trunk/bin/withWatermarkEvenPages.pdf This is what you can get] with a few lines of code.
 
 {{{
     // Code looks like this
