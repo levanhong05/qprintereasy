@@ -39,6 +39,8 @@ class QPrinterEasyPrivate;
 #include <QPixmap>
 #include <QTextDocument>
 #include <QPrinter>
+#include <QFont>
+#include <QColor>
 
 class Q_QPRINTEREASY_EXPORT QPrinterEasy : public QObject
 {
@@ -87,6 +89,7 @@ public:
 
     void addWatermarkText( const QString & plainText,
                            const QFont & font = QFont( "Hevetica", 36 ),
+                           const QColor & color = QColor("lightgrey"),
                            const Presence p = EachPages,
                            const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
                            const Qt::Alignment textAlignment = Qt::AlignCenter,
