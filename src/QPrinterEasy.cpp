@@ -211,6 +211,30 @@ bool QPrinterEasyPrivate::complexDraw()
 
             // need new page ?
             if ( (drawnedSize.height() + blockRect.size().height()) > pageSize.height() ) {
+
+                int i = 0;
+                QTextLayout *layout = block.layout();
+                if ( layout->lineCount() > 1 ) {
+
+
+                    // TODO --> draw line by line
+
+
+                    qWarning() << "lines in block" << block.layout()->lineCount();
+                    int heightSave = drawnedSize.height();
+                    // draw the maximum lines into the page before creating a new one
+                    while (layout->lineAt(i).height() + drawnedSize.height() < pageSize.height()) {
+                        //layout->lineAt(i).draw( &painter, QPointF(0,0) );
+                        drawnedSize.setHeight( drawnedSize.height() + layout->lineAt(i).height());
+                        qWarning() << "draw line" << i;
+                        ++i;
+                    }
+                    drawnedSize.setHeight( heightSave );
+
+
+                    // END TODO
+
+                }
                 pageNumber = complexDrawNewPage( painter, headerSize, footerSize, pageSize,
                                                  correctedY, drawnedSize, pageNumber );
             }
