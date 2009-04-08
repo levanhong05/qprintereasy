@@ -267,7 +267,6 @@ int QPrinterEasyPrivate::complexDrawNewPage( QPainter &p, QSizeF & headerSize, Q
         p.save();
         p.translate(0, correctedY );
         doc->drawContents( &p, headRect );
-//        p.drawRect( headRect );
         p.restore();
         // translate painter under the header
         p.restore();
@@ -702,9 +701,9 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
 }
 
 void QPrinterEasy::addWatermarkText( const QString & plainText,
+                                     const Presence p,
                                      const QFont & font,
                                      const QColor & color,
-                                     const Presence p,
                                      const Qt::Alignment watermarkAlignment,
                                      const Qt::Alignment textAlignment,
                                      const int orientation )
