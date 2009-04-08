@@ -234,6 +234,8 @@ int QPrinterEasyPrivate::complexDrawNewPage( QPainter &p, QSizeF & headerSize, Q
     bool headerDrawned = false;
     bool footerDrawned = false;
 
+    // correctedY --> translate painter to  (0, correctedY)  in order to paint with pageRect coordonnates
+
     // do we have to create a newpage into printer ?
     if ( currentPageNumber != 0 ) {
         m_Printer->newPage();
@@ -262,7 +264,11 @@ int QPrinterEasyPrivate::complexDrawNewPage( QPainter &p, QSizeF & headerSize, Q
         headerSize = doc->size();
         // draw header
         QRectF headRect = QRectF(QPoint(0,0), headerSize );
+        p.save();
+        p.translate(0, correctedY );
         doc->drawContents( &p, headRect );
+//        p.drawRect( headRect );
+        p.restore();
         // translate painter under the header
         p.restore();
         p.translate( 0, headerSize.height() );
@@ -393,13 +399,19 @@ bool QPrinterEasyPrivate::insertWatermark( const int page )
 }
 
 
-QTextDocument *QPrinterEasyPrivate::header(int pageNumber) {
+QTextDocument *QPrinterEasyPrivate::header(int pageNumber)
+{
+    // if header was setted ForEachPages
+    if (m_header)
+        return m_header;
+    // else return from map
     if (m_pageHeaders.find(pageNumber) == m_pageHeaders.end())
         return m_header;
     return m_pageHeaders[pageNumber];
 }
 
-QTextDocument *QPrinterEasyPrivate::header(QPrinterEasy::Presence p) {
+QTextDocument *QPrinterEasyPrivate::header(QPrinterEasy::Presence p)
+{
     switch (p) {
     case QPrinterEasy::EachPages: return m_header;
     case QPrinterEasy::FirstPageOnly: return header(1);
@@ -689,7 +701,9 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
 
 }
 
-void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & font,
+void QPrinterEasy::addWatermarkText( const QString & plainText,
+                                     const QFont & font,
+                                     const QColor & color,
                                      const Presence p,
                                      const Qt::Alignment watermarkAlignment,
                                      const Qt::Alignment textAlignment,
@@ -746,7 +760,7 @@ void QPrinterEasy::addWatermarkText( const QString & plainText, const QFont & fo
     painter.begin( &d->m_Watermark );
     painter.translate( -pageRect.topLeft() );  // TODO : this is wrong because we loose the margins
     painter.save();
-    painter.setPen( "gray" );
+    painter.setPen( color );
     painter.setFont( font );
 
     QTextOption opt;

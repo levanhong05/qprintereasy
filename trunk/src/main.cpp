@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
 
     QPrinterEasy pe;
     pe.askForPrinter();
-    pe.addWatermarkText( "Trying left" , QFont( "Hevetica", 36 ), QPrinterEasy::EachPages, Qt::AlignLeft );
-    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
-    pe.setFooter( footer, QPrinterEasy::SecondPageOnly );
+    pe.addWatermarkText( "Adding a plain text\nWATERMARK" );
+    pe.setHeader( header );
+    pe.setFooter( footer );
     pe.setContent( document );
     pe.previewDialog();
 
