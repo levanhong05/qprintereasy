@@ -106,10 +106,10 @@ public:
     /** \brief Add a plain text watermark to pages. */
     void addWatermarkText( const QString & plainText,
                            const Presence p = EachPages,
-                           const QFont & font = QFont( "Hevetica", 36 ),
-                           const QColor & color = QColor("lightgrey"),
                            const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
                            const Qt::Alignment textAlignment = Qt::AlignCenter,
+                           const QFont & font = QFont( "Hevetica", 36 ),
+                           const QColor & color = QColor("lightgrey"),
                            const int orientation = -1 );
 
     /** \brief Add a Html watermark to pages. */

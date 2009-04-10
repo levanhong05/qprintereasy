@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 
     QPrinterEasy pe;
     pe.askForPrinter();
-    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EventPages );
+    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EventPages, Qt::AlignLeft );
     pe.setHeader( header, QPrinterEasy::FirstPageOnly );
     pe.setHeader( header2, QPrinterEasy::AllOtherPages );
     pe.setFooter( footer );
