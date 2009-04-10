@@ -28,57 +28,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS  *
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                   *
  **********************************************************************************/
+ 
+///////////////////////////////////////////////////////////
+///////////// QTextDocumentHeader /////////////////////////
+///////////////////////////////////////////////////////////
 
-#include <QFile>
-#include <QApplication>
-#include <QDir>
-#include <QtDebug>
-#include <QTextFrame>
 
-#include "qprintereasy.h"
-
-QByteArray readEntireFile(const QString &fileName)
+class QTextDocumentHeader : public QTextDocument
 {
-	QFile f(fileName);
-	if (f.open(QIODevice::ReadOnly))
-		return f.readAll();
+public:
+    QTextDocumentHeader( QObject *parent = 0 ): QTextDocument( parent ) {}
+    QTextDocumentHeader( const QString & text, QObject * parent = 0 ): QTextDocument( text, parent ) {}
+    ~QTextDocumentHeader() {}
 
-	qCritical("Error in loading %s", qPrintable(fileName));
-	return QByteArray();
-}
+    void setPriority( QPrinterEasy::Priority p )  { m_Priority = p; }
+    void setPresence( QPrinterEasy::Presence p )  { m_Presence = p; }
 
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
+    QPrinterEasy::Priority priority() { return m_Priority; }
+    QPrinterEasy::Presence presence() { return m_Presence; }
 
-    QDir dir(app.applicationDirPath());
-    QString header = readEntireFile(dir.filePath("header.html"));
-    QString header2 = readEntireFile(dir.filePath("header_2.html"));
-    QString footer = readEntireFile(dir.filePath("footer.html"));
-    QString footer2 = readEntireFile(dir.filePath("footer_2.html"));
-    QString watermark = readEntireFile(dir.filePath("watermark.html"));
-    QString document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
-
-//    QTextDocument td(document);
-//    qWarning() << "document blockCount" << td.blockCount();
-//
-//    QTextFrame::iterator it;
-//    int i = 0;
-//    for (it = td.rootFrame()->begin(); !(it.atEnd()); ++it) {
-//        ++i;
-//    }
-//    qWarning() << "document frameCount" << i;
-
-    QPrinterEasy pe;
-    pe.askForPrinter();
-    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EventPages, Qt::AlignLeft );
-    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
-    pe.setHeader( header2, QPrinterEasy::EachPages );
-    pe.setFooter( footer );
-    pe.setFooter( footer2 );
-//    pe.setFooter( footer );
-    pe.setContent( document );
-    pe.previewDialog();
-
-    return 0;
-}
+private:
+    QPrinterEasy::Presence  m_Presence;
+    QPrinterEasy::Priority  m_Priority;
+};
