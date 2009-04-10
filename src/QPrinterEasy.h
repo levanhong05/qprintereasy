@@ -60,9 +60,16 @@ public:
         FirstPageOnly,
         SecondPageOnly,
         LastPageOnly,
-        AllOtherPages,
+        ButFirstPage,
         OddPages,  // pages impaires
         EventPages // pages paires
+    };
+
+    enum Priority {
+        First = 0,
+        Second,
+        Third,
+        Quater
     };
 
     /** \brief Class instanciation.
@@ -79,7 +86,8 @@ public:
     bool previewDialog( QWidget *parent = 0, bool test = false );
 
     /** \brief Set a header for a special page */
-    void setHeader( const QString & html, Presence p = EachPages );
+    void setHeader( const QString & html, Presence p = EachPages, QPrinterEasy::Priority prior = First );
+    void clearHeaders();
 
     /** \brief Set a header for a particular page
          * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
@@ -87,7 +95,8 @@ public:
     void setHeader( const QString & html, int pageNumber );
 
     /** \brief Set a footer for a special page */
-    void setFooter( const QString & html, Presence p = EachPages );
+    void setFooter( const QString & html, Presence p = EachPages, QPrinterEasy::Priority prior = First );
+    void clearFooters();
 
     /** \brief Set a footer for a particular page
          * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
@@ -126,16 +135,6 @@ protected Q_SLOTS:
 
 private:
     QPrinterEasyPrivate *d;
-};
-
-
-class QTextDocumentHeader : public QTextDocument
-{
-    // TODO : this class should be in the private part ?
-    // should contain the header
-    // should contain the printing params : pagesToAdd, priority
-    // pagesToAdd is a QPrinterEasy::Presence
-    // priority is used when multi-headers should be printed on the same page.
 };
 
 #endif // QPRINTEREASY_H
