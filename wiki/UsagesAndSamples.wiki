@@ -87,3 +87,20 @@
     pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EventPages );
     pe.previewDialog();
 }}}
+
+  ==MultiHeaders, one footer, watermark on EvenPages ==
+
+  * [http://qprintereasy.googlecode.com/svn/trunk/bin/twoHeaders.pdfsample]
+
+{{{
+    // Code looks like this
+    QPrinterEasy pe;
+    pe.askForPrinter();
+    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
+    pe.setHeader( header2, QPrinterEasy::EachPages );
+    pe.setContent( document );
+    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EventPages );
+    pe.previewDialog();
+}}}
+
+
