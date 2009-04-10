@@ -41,6 +41,7 @@
 #include <QTextLayout>
 #include <QTextFrame>
 #include <QTextTable>
+#include <QPointer>
 #include <math.h>
 
 // For test
@@ -59,8 +60,7 @@ class QPrinterEasyPrivate
 {
 public:
     QPrinterEasyPrivate()
-                : m_Printer(0),
-                m_header(0), m_footer(0) {}
+                : m_Printer(0), m_header(0), m_footer(0) {}
     ~QPrinterEasyPrivate();
 
     QTextDocument &content() { return m_content; }
@@ -101,6 +101,16 @@ public:
         return -atan( calculatedTang ) * 180.0 / pi;
     }
 
+private:
+    // use simpleDraw or complexDraw method ?
+    bool isSimple() const { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
+    // add a watermark to the page page ?
+    bool insertWatermark( const int page );
+
+    // simpleDraw method
+    bool simpleDraw();
+    // complexDraw method
+    bool complexDraw();
 
 public:
     QPixmap m_Watermark; // null watermark at constructor time
@@ -108,22 +118,16 @@ public:
     QPrinter *m_Printer;
 
 private:
-    QTextDocument m_content;
-    QTextDocument *m_header, *m_footer;
-    QMap<int, QTextDocument*> m_pageHeaders;
-    QMap<int, QTextDocument*> m_pageFooters;
+    QTextDocument m_content;                             // TODO transform to QPointer<QTextDocument> ?
+    QPointer<QTextDocument> m_header, m_footer;          // TODO this should become obsolete
+    QMap<int, QPointer<QTextDocument> > m_pageHeaders;   // TODO --> QSet< QPointer<QTextDocumentHeader> >
+    QMap<int, QPointer<QTextDocument> > m_pageFooters;   // TODO --> QSet< QPointer<QTextDocumentHeader> >
 
-    bool isSimple() const { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
-    bool insertWatermark( const int page );
-    bool simpleDraw();
-    bool complexDraw();
 };
 
 ///////////////////////////////////////////////////////////
 ///////////// QPrinterEasyPrivate /////////////////////////
 ///////////////////////////////////////////////////////////
-
-
 QPrinterEasyPrivate::~QPrinterEasyPrivate()
 {
     if (m_Printer)
@@ -138,8 +142,10 @@ QPrinterEasyPrivate::~QPrinterEasyPrivate()
 
 void QPrinterEasyPrivate::renewPrinter()
 {
-    if (m_Printer)
+    if (m_Printer) {
         delete m_Printer;
+        m_Printer=0;
+    }
     m_Printer = new QPrinter;
 }
 
@@ -224,7 +230,7 @@ bool QPrinterEasyPrivate::complexDraw()
                     int heightSave = drawnedSize.height();
                     // draw the maximum lines into the page before creating a new one
                     while (layout->lineAt(i).height() + drawnedSize.height() < pageSize.height()) {
-                        //layout->lineAt(i).draw( &painter, QPointF(0,0) );
+//                        layout->lineAt(i).draw( &painter, layout->lineAt(i).position() );
                         drawnedSize.setHeight( drawnedSize.height() + layout->lineAt(i).height());
                         qWarning() << "draw line" << i;
                         ++i;
@@ -401,7 +407,8 @@ bool QPrinterEasyPrivate::simpleDraw()
     return true;
 }
 
-bool QPrinterEasyPrivate::draw() {
+bool QPrinterEasyPrivate::draw()
+{
     if (isSimple())
         return simpleDraw();
     else
@@ -420,7 +427,6 @@ bool QPrinterEasyPrivate::insertWatermark( const int page )
         return true;
     return false;
 }
-
 
 QTextDocument *QPrinterEasyPrivate::header(int pageNumber)
 {
@@ -444,13 +450,15 @@ QTextDocument *QPrinterEasyPrivate::header(QPrinterEasy::Presence p)
     }
 }
 
-QTextDocument *QPrinterEasyPrivate::footer(int pageNumber) {
+QTextDocument *QPrinterEasyPrivate::footer(int pageNumber)
+{
     if (m_pageFooters.find(pageNumber) == m_pageFooters.end())
         return m_footer;
     return m_pageFooters[pageNumber];
 }
 
-QTextDocument *QPrinterEasyPrivate::footer(QPrinterEasy::Presence p) {
+QTextDocument *QPrinterEasyPrivate::footer(QPrinterEasy::Presence p)
+{
     switch (p) {
     case QPrinterEasy::EachPages: return m_footer;
     case QPrinterEasy::FirstPageOnly: return footer(1);
@@ -588,6 +596,7 @@ bool QPrinterEasy::previewDialog( QWidget *parent, bool test )
     if (!d->m_Printer)
         return false;
 
+#ifdef QPRINTEREASY_DEBUG
     // For test
     if ( test ) {
         QDialog dial;
@@ -613,6 +622,9 @@ bool QPrinterEasy::previewDialog( QWidget *parent, bool test )
         dial.exec();
         // end of test
     }
+#else
+    Q_UNUSED(test);
+#endif
 
     QPrintPreviewDialog dialog(d->m_Printer, parent);
     connect( &dialog, SIGNAL(paintRequested(QPrinter *)), this, SLOT(print(QPrinter *)) );

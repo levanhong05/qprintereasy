@@ -58,20 +58,21 @@ int main(int argc, char *argv[])
     QString watermark = readEntireFile(dir.filePath("watermark.html"));
     QString document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
 
-    QTextDocument td(document);
-    qWarning() << "document blockCount" << td.blockCount();
-
-    QTextFrame::iterator it;
-    int i = 0;
-    for (it = td.rootFrame()->begin(); !(it.atEnd()); ++it) {
-        ++i;
-    }
-    qWarning() << "document frameCount" << i;
+//    QTextDocument td(document);
+//    qWarning() << "document blockCount" << td.blockCount();
+//
+//    QTextFrame::iterator it;
+//    int i = 0;
+//    for (it = td.rootFrame()->begin(); !(it.atEnd()); ++it) {
+//        ++i;
+//    }
+//    qWarning() << "document frameCount" << i;
 
     QPrinterEasy pe;
     pe.askForPrinter();
     pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EventPages );
-    pe.setHeader( header );
+    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
+    pe.setHeader( header2, QPrinterEasy::AllOtherPages );
     pe.setFooter( footer );
     pe.setContent( document );
     pe.previewDialog();

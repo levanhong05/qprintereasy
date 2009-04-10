@@ -33,6 +33,7 @@
 
 #include "QPrinterEasy_global.h"
 class QPrinterEasyPrivate;
+class QTextDocumentHeader;
 
 #include <QObject>
 #include <QFlags>
@@ -41,6 +42,13 @@ class QPrinterEasyPrivate;
 #include <QPrinter>
 #include <QFont>
 #include <QColor>
+
+/**
+ * \file QPrinterEasy.h
+ * \author QPrinterEasy Team
+ * \version 0.0.5
+ * \date April 10 2009
+*/
 
 class Q_QPRINTEREASY_EXPORT QPrinterEasy : public QObject
 {
@@ -52,15 +60,22 @@ public:
         FirstPageOnly,
         SecondPageOnly,
         LastPageOnly,
+        AllOtherPages,
         OddPages,  // pages impaires
         EventPages // pages paires
     };
 
+    /** \brief Class instanciation.
+      *
+      */
     QPrinterEasy( QObject * parent = 0 );
     ~QPrinterEasy();
 
+    /** \brief Shows the print dialog */
     bool askForPrinter( QWidget *parent = 0 );
     bool useDefaultPrinter();
+
+    /** \brief Shows the preview dialog. test param should only be used for debugging. */
     bool previewDialog( QWidget *parent = 0, bool test = false );
 
     /** \brief Set a header for a special page */
@@ -79,6 +94,7 @@ public:
          */
     void setFooter( const QString & html, int pageNumber );
 
+    /** \brief Set the main text to print/ */
     void setContent( const QString & html );
 
 
@@ -87,6 +103,7 @@ public:
                              const Presence p = EachPages,
                              const Qt::AlignmentFlag alignement = Qt::AlignCenter);
 
+    /** \brief Add a plain text watermark to pages. */
     void addWatermarkText( const QString & plainText,
                            const Presence p = EachPages,
                            const QFont & font = QFont( "Hevetica", 36 ),
@@ -95,6 +112,7 @@ public:
                            const Qt::Alignment textAlignment = Qt::AlignCenter,
                            const int orientation = -1 );
 
+    /** \brief Add a Html watermark to pages. */
     void addWatermarkHtml( const QString & html,
                            const Presence p = EachPages,
                            const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
@@ -102,11 +120,22 @@ public:
 
     bool print( const QTextDocument & docToPrint );
 
-public Q_SLOTS:
+protected Q_SLOTS:
+    /** \brief Slot used by the preview dialog. */
     bool print( QPrinter *printer = 0 );  // used by QPrintPreviewDialog
 
 private:
     QPrinterEasyPrivate *d;
+};
+
+
+class QTextDocumentHeader : public QTextDocument
+{
+    // TODO : this class should be in the private part ?
+    // should contain the header
+    // should contain the printing params : pagesToAdd, priority
+    // pagesToAdd is a QPrinterEasy::Presence
+    // priority is used when multi-headers should be printed on the same page.
 };
 
 #endif // QPRINTEREASY_H
