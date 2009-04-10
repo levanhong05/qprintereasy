@@ -28,57 +28,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS  *
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                   *
  **********************************************************************************/
+#ifndef QPRINTEREASY_GLOBAL_H
+#define QPRINTEREASY_GLOBAL_H
 
-#include <QFile>
-#include <QApplication>
-#include <QDir>
-#include <QtDebug>
-#include <QTextFrame>
+#include <QtCore/qglobal.h>
 
-#include "qprintereasy.h"
+#if defined(QPRINTEREASY_LIBRARY)
+#  define Q_QPRINTEREASY_EXPORT Q_DECL_EXPORT
+#else
+#  define Q_QPRINTEREASY_EXPORT Q_DECL_IMPORT
+#endif
 
-QByteArray readEntireFile(const QString &fileName)
-{
-	QFile f(fileName);
-	if (f.open(QIODevice::ReadOnly))
-		return f.readAll();
-
-	qCritical("Error in loading %s", qPrintable(fileName));
-	return QByteArray();
-}
-
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
-
-    QDir dir(app.applicationDirPath());
-    QString header = readEntireFile(dir.filePath("header.html"));
-    QString header2 = readEntireFile(dir.filePath("header_2.html"));
-    QString footer = readEntireFile(dir.filePath("footer.html"));
-    QString footer2 = readEntireFile(dir.filePath("footer_2.html"));
-    QString watermark = readEntireFile(dir.filePath("watermark.html"));
-    QString document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
-
-//    QTextDocument td(document);
-//    qWarning() << "document blockCount" << td.blockCount();
-//
-//    QTextFrame::iterator it;
-//    int i = 0;
-//    for (it = td.rootFrame()->begin(); !(it.atEnd()); ++it) {
-//        ++i;
-//    }
-//    qWarning() << "document frameCount" << i;
-
-    QPrinterEasy pe;
-    pe.askForPrinter();
-    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EventPages, Qt::AlignLeft );
-    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
-    pe.setHeader( header2, QPrinterEasy::EachPages );
-    pe.setFooter( footer );
-    pe.setFooter( footer2 );
-//    pe.setFooter( footer );
-    pe.setContent( document );
-    pe.previewDialog();
-
-    return 0;
-}
+#endif // QPRINTEREASY_GLOBAL_H
