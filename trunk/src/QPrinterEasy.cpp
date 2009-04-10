@@ -30,6 +30,7 @@
  **********************************************************************************/
 
 #include <QPainter>
+#include <QPixmap>
 #include <QRectF>
 #include <QRect>
 #include <QPrintPreviewDialog>
@@ -60,19 +61,19 @@ class QPrinterEasyPrivate
 {
 public:
     QPrinterEasyPrivate()
-                : m_Printer(0), m_header(0), m_footer(0) {}
+                : m_Printer(0) {}//, m_header(0), m_footer(0) {}
     ~QPrinterEasyPrivate();
 
     QTextDocument &content() { return m_content; }
-    QTextDocument *header(int pageNumber); // Returns 0 if there is no header for the page
+    QList<QTextDocumentHeader*> headers(int pageNumber);
     QTextDocument *header(QPrinterEasy::Presence p); // Returns 0 if there is no header for the presence
-    QTextDocument *footer(int pageNumber); // Returns 0 if there is no footer for the page
+    QList<QTextDocumentHeader*> footers(int pageNumber);
     QTextDocument *footer(QPrinterEasy::Presence p); // Returns 0 if there is no footer for the presence
 
-    void setHeader( const QString & html, QPrinterEasy::Presence p );
+    void setHeader( const QString & html, QPrinterEasy::Presence p, QPrinterEasy::Priority prior );
     void setHeader( const QString & html, int pageNumber );
 
-    void setFooter( const QString & html, QPrinterEasy::Presence p );
+    void setFooter( const QString & html, QPrinterEasy::Presence p, QPrinterEasy::Priority prior );
     void setFooter( const QString & html, int pageNumber );
 
     // Affect the width in argument to all QTextDocument
@@ -103,11 +104,12 @@ public:
     // calculate rotation angle of watermark using the alignment (return the angle)
     int calculateWatermarkRotation( QRectF & textRect, const QRectF pageRect, const Qt::Alignment watermarkAlignment );
 
+    // used by all
+    bool presenceIsRequiredAtPage( const int page, const int presence);
+
 private:
     // use simpleDraw or complexDraw method ?
-    bool isSimple() const { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
-    // add a watermark to the page page ?
-    bool insertWatermark( const int page );
+    bool isSimple() const;// { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
 
     // simpleDraw method
     bool simpleDraw();
@@ -118,14 +120,59 @@ public:
     QPixmap m_Watermark; // null watermark at constructor time
     int m_WatermarkPresence;
     QPrinter *m_Printer;
+    QList< QPointer<QTextDocumentHeader> > m_Headers;
+    QList< QPointer<QTextDocumentHeader> > m_Footers;
 
 private:
     QTextDocument m_content;                             // TODO transform to QPointer<QTextDocument> ?
-    QPointer<QTextDocument> m_header, m_footer;          // TODO this should become obsolete
-    QMap<int, QPointer<QTextDocument> > m_pageHeaders;   // TODO --> QSet< QPointer<QTextDocumentHeader> >
-    QMap<int, QPointer<QTextDocument> > m_pageFooters;   // TODO --> QSet< QPointer<QTextDocumentHeader> >
+//    QPointer<QTextDocument> m_header, m_footer;          // TODO this should become obsolete
+//    QMap<int, QPointer<QTextDocument> > m_pageHeaders;   // TODO --> QSet< QPointer<QTextDocumentHeader> >
+//    QMap<int, QPointer<QTextDocument> > m_pageFooters;   // TODO --> QSet< QPointer<QTextDocumentHeader> >
+
 
 };
+
+
+///////////////////////////////////////////////////////////
+///////////// QTextDocumentHeader /////////////////////////
+///////////////////////////////////////////////////////////
+class QTextDocumentHeader : public QTextDocument
+{
+public:
+    QTextDocumentHeader( QObject *parent = 0 ): QTextDocument( parent ) {}
+    QTextDocumentHeader( const QString & text, QObject * parent = 0 ): QTextDocument( text, parent ) {}
+    ~QTextDocumentHeader() {}
+
+    void setPriority( QPrinterEasy::Priority p )  { m_Priority = p; }
+    void setPresence( QPrinterEasy::Presence p )  { m_Presence = p; }
+
+    QPrinterEasy::Priority priority() { return m_Priority; }
+    QPrinterEasy::Presence presence() { return m_Presence; }
+
+private:
+    QPrinterEasy::Presence  m_Presence;
+    QPrinterEasy::Priority  m_Priority;
+};
+
+bool QPrinterEasyPrivate::presenceIsRequiredAtPage( const int page, const int presence)
+{
+    if (presence == QPrinterEasy::EachPages)
+        return true;
+    if ( ( presence == QPrinterEasy::OddPages ) && ((page % 2) == 1) )
+        return true;
+    if ( ( presence == QPrinterEasy::EventPages ) && ((page % 2) == 0) )
+        return true;
+    if ( (presence == QPrinterEasy::FirstPageOnly) && (page==1) )
+        return true;
+    if ( (presence == QPrinterEasy::SecondPageOnly) && (page==2) )
+        return true;
+    if ( (presence == QPrinterEasy::ButFirstPage) && (page!=1) )
+        return true;
+    // TODO LastPageOnly need to know the pageCount of the doc too
+    return false;
+
+    return true;
+}
 
 ///////////////////////////////////////////////////////////
 ///////////// QPrinterEasyPrivate /////////////////////////
@@ -134,12 +181,12 @@ QPrinterEasyPrivate::~QPrinterEasyPrivate()
 {
     if (m_Printer)
         delete m_Printer;
-    if (m_header)
-        delete m_header;
-    if (m_footer)
-        delete m_footer;
-    qDeleteAll(m_pageHeaders);
-    qDeleteAll(m_pageFooters);
+//    if (m_header)
+//        delete m_header;
+//    if (m_footer)
+//        delete m_footer;
+//    qDeleteAll(m_pageHeaders);
+//    qDeleteAll(m_pageFooters);
 }
 
 void QPrinterEasyPrivate::renewPrinter()
@@ -153,14 +200,27 @@ void QPrinterEasyPrivate::renewPrinter()
 
 void QPrinterEasyPrivate::setTextWidth(int width) {
     m_content.setTextWidth(width);
-    if (m_header)
-        m_header->setTextWidth(width);
-    if (m_footer)
-        m_footer->setTextWidth(width);
-    foreach (QTextDocument *doc, m_pageHeaders)
+    // OBSOLETE
+//    if (m_header)
+//        m_header->setTextWidth(width);
+//    if (m_footer)
+//        m_footer->setTextWidth(width);
+//    foreach (QTextDocument *doc, m_pageHeaders)
+//        doc->setTextWidth(width);
+//    foreach (QTextDocument *doc, m_pageFooters)
+//        doc->setTextWidth(width);
+    // END OBSOLETE
+    foreach (QTextDocument *doc, m_Headers)
         doc->setTextWidth(width);
-    foreach (QTextDocument *doc, m_pageFooters)
+    foreach (QTextDocument *doc, m_Footers)
         doc->setTextWidth(width);
+
+
+}
+
+bool QPrinterEasyPrivate::isSimple() const // { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
+{
+    return ((m_Headers.count()==1) && (m_Footers.count()==1) && m_Watermark.isNull());
 }
 
 bool QPrinterEasyPrivate::complexDraw()
@@ -273,9 +333,9 @@ int QPrinterEasyPrivate::complexDrawNewPage( QPainter &p, QSizeF & headerSize, Q
         m_Printer->newPage();
         p.restore();
         int previousHeaderHeight = 0;
-        QTextDocument *doc = header(currentPageNumber);
-        if (doc)
-            previousHeaderHeight = doc->size().height();
+        foreach( QTextDocument *doc, headers(currentPageNumber) ) {
+            previousHeaderHeight += doc->size().height();
+        }
         p.translate( 0, -drawnedSize.height() - previousHeaderHeight );
         correctedY += drawnedSize.height();
         p.save();
@@ -283,7 +343,7 @@ int QPrinterEasyPrivate::complexDrawNewPage( QPainter &p, QSizeF & headerSize, Q
     }
 
     // do we have to include a watermark ?
-    if ( insertWatermark(currentPageNumber+1) ) {
+    if ( presenceIsRequiredAtPage( currentPageNumber+1 , m_WatermarkPresence ) ) {
         p.save();
         p.translate(0, correctedY );
         p.drawPixmap( m_Printer->pageRect(), m_Watermark );
@@ -291,36 +351,40 @@ int QPrinterEasyPrivate::complexDrawNewPage( QPainter &p, QSizeF & headerSize, Q
     }
 
     // do we have to include the header ?
-    QTextDocument *doc = header(currentPageNumber + 1);
-    if ( doc ) {
+    int specialY = correctedY;
+    int headerHeight = 0;
+    foreach( QTextDocument *doc, headers(currentPageNumber + 1) ) {
         headerSize = doc->size();
-        // draw header
-        QRectF headRect = QRectF(QPoint(0,0), headerSize );
+        // draw all headers
         p.save();
-        p.translate(0, correctedY );
+        p.translate(0, specialY );
+        specialY = 0;
+        headerHeight += doc->size().height();
+        QRectF headRect = QRectF(QPoint(0,0), headerSize );
         doc->drawContents( &p, headRect );
         p.restore();
         // translate painter under the header
         p.restore();
-        p.translate( 0, headerSize.height() );
+        p.translate( 0, doc->size().height() );
         p.save();
         headerDrawned = true;
-    } else
-        headerSize = QSizeF(0,0);
+    }
+    headerSize.setHeight( headerHeight );
+
 
     // do we have to include the footer ?
-    doc = footer(currentPageNumber + 1);
-    if ( doc ) {
-        footerSize = doc->size();
+    int footHeight = 0;
+    foreach( QTextDocument *doc, footers(currentPageNumber + 1) ) {
+        footerSize = QSizeF(doc->size().width(),0);
+        footHeight += doc->size().height();
         p.save();
-        p.translate(0, m_Printer->pageRect().bottom() + correctedY - footerSize.height() - headerSize.height() - 10);
-        QRectF footRect = QRectF(QPoint(0,0), footerSize );
+        p.translate(0, m_Printer->pageRect().bottom() + correctedY - footHeight - headerSize.height() - 10);
+        QRectF footRect = QRectF(QPoint(0,0), QSizeF( doc->size().width(), footHeight) );
         doc->drawContents(&p, footRect);
         p.restore();
         footerDrawned = true;
     }
-    else
-        footerSize = QSizeF(0,0);
+    footerSize.setHeight( footHeight );
 
     // recalculate the content size of the content page
     pageSize = QSizeF( m_Printer->pageRect().width(),
@@ -352,7 +416,7 @@ bool QPrinterEasyPrivate::simpleDraw()
     QTextDocument *footerDoc = footer(QPrinterEasy::EachPages);
     if (footerDoc) {
         footerDoc->setTextWidth( pageWidth );
-        footerSize.setHeight(m_footer->size().height());
+        footerSize.setHeight(footerDoc->size().height());
     }
 
     QSize size;
@@ -417,111 +481,119 @@ bool QPrinterEasyPrivate::draw()
         return complexDraw();
 }
 
-bool QPrinterEasyPrivate::insertWatermark( const int page )
+QList<QTextDocumentHeader*> QPrinterEasyPrivate::headers( int pageNumber )
 {
-    if ( m_Watermark.isNull() )
-        return false;
-    if ( m_WatermarkPresence == QPrinterEasy::EachPages )
-        return true;
-    if ( ( m_WatermarkPresence == QPrinterEasy::OddPages ) && ((page % 2) == 1) )
-        return true;
-    if ( ( m_WatermarkPresence == QPrinterEasy::EventPages ) && ((page % 2) == 0) )
-        return true;
-    return false;
-}
-
-QTextDocument *QPrinterEasyPrivate::header(int pageNumber)
-{
-    // if header was setted ForEachPages
-    if (m_header)
-        return m_header;
-    // else return from map
-    if (m_pageHeaders.find(pageNumber) == m_pageHeaders.end())
-        return m_header;
-    return m_pageHeaders[pageNumber];
+    // TODO returns a QList< QTextDocumentHeader *> sorted by priority
+    QList< QTextDocumentHeader *> list;
+    foreach( QTextDocumentHeader *doc, m_Headers ) {
+        qWarning() << "QPrinterEasyPrivate::headers" << doc->presence();
+        if (presenceIsRequiredAtPage(pageNumber, doc->presence()))
+            list << doc;
+    }
+    return list;
+//
+//    // if header was setted ForEachPages
+//    if (m_header)
+//        return m_header;
+//    // else return from map
+//    if (m_pageHeaders.find(pageNumber) == m_pageHeaders.end())
+//        return m_header;
+//    return m_pageHeaders[pageNumber];
 }
 
 QTextDocument *QPrinterEasyPrivate::header(QPrinterEasy::Presence p)
 {
-    switch (p) {
-    case QPrinterEasy::EachPages: return m_header;
-    case QPrinterEasy::FirstPageOnly: return header(1);
-    case QPrinterEasy::SecondPageOnly: return header(2);
-    case QPrinterEasy::LastPageOnly: return header(-1);
-    default: return 0;
-    }
+//    // TODO : OBSOLETE
+//    switch (p) {
+//    case QPrinterEasy::EachPages: return m_header;
+//    case QPrinterEasy::FirstPageOnly: return header(1);
+//    case QPrinterEasy::SecondPageOnly: return header(2);
+//    case QPrinterEasy::LastPageOnly: return header(-1);
+//    default: return 0;
+//    }
+
+    return 0;
 }
 
-QTextDocument *QPrinterEasyPrivate::footer(int pageNumber)
+QList<QTextDocumentHeader*> QPrinterEasyPrivate::footers(int pageNumber)
 {
-    if (m_pageFooters.find(pageNumber) == m_pageFooters.end())
-        return m_footer;
-    return m_pageFooters[pageNumber];
+    // TODO returns a QList< QTextDocumentHeader *> sorted by priority
+    QList< QTextDocumentHeader *> list;
+    foreach( QTextDocumentHeader *doc, m_Footers ) {
+        qWarning() << "QPrinterEasyPrivate::footers" << doc->presence();
+        if (presenceIsRequiredAtPage(pageNumber, doc->presence()))
+            list << doc;
+    }
+    return list;
+//    if (m_pageFooters.find(pageNumber) == m_pageFooters.end())
+//        return m_footer;
+//    return m_pageFooters[pageNumber];
 }
 
 QTextDocument *QPrinterEasyPrivate::footer(QPrinterEasy::Presence p)
 {
-    switch (p) {
-    case QPrinterEasy::EachPages: return m_footer;
-    case QPrinterEasy::FirstPageOnly: return footer(1);
-    case QPrinterEasy::SecondPageOnly: return footer(2);
-    case QPrinterEasy::LastPageOnly: return footer(-1);
-    default: return 0;
-    }
+//    switch (p) {
+//    case QPrinterEasy::EachPages: return m_footer;
+//    case QPrinterEasy::FirstPageOnly: return footer(1);
+//    case QPrinterEasy::SecondPageOnly: return footer(2);
+//    case QPrinterEasy::LastPageOnly: return footer(-1);
+//    default: return 0;
+//    }
 }
 
-void QPrinterEasyPrivate::setHeader( const QString & html, QPrinterEasy::Presence p )
+void QPrinterEasyPrivate::setHeader( const QString & html, QPrinterEasy::Presence presence, QPrinterEasy::Priority prior )
 {
-    switch (p) {
-    case QPrinterEasy::EachPages:
-        if (!m_header)
-            m_header = new QTextDocument;
-        m_header->setHtml( html );
-        break;
-    case QPrinterEasy::FirstPageOnly:
-        setHeader( html, 1 );
-        break;
-    case QPrinterEasy::SecondPageOnly:
-        setHeader( html, 2 );
-        break;
-    case QPrinterEasy::LastPageOnly:
-        setHeader( html, -1 );
-        break;
-    }
+//    switch (p) {
+//    case QPrinterEasy::EachPages:
+//        if (!m_header)
+//            m_header = new QTextDocument;
+//        m_header->setHtml( html );
+//        break;
+//    case QPrinterEasy::FirstPageOnly:
+//        setHeader( html, 1 );
+//        break;
+//    case QPrinterEasy::SecondPageOnly:
+//        setHeader( html, 2 );
+//        break;
+//    case QPrinterEasy::LastPageOnly:
+//        setHeader( html, -1 );
+//        break;
+//    }
+//    QTextDocumentHeader *doc = new QTextDocumentHeader(html);
+//    doc->setPresence( presence );
+//    doc->setPriority( prior );
+//    m_Headers.append(doc);// << QPointer<QTextDocumentHeader>(doc) ;
+}
+void QPrinterEasy::clearHeaders()
+{
+    qDeleteAll(d->m_Headers);
+}
+
+void QPrinterEasy::clearFooters()
+{
+    qDeleteAll(d->m_Footers);
 }
 
 void QPrinterEasyPrivate::setHeader( const QString & html, int pageNumber )
 {
-    if (!m_pageHeaders[pageNumber])
-        m_pageHeaders[pageNumber] = new QTextDocument;
-    m_pageHeaders[pageNumber]->setHtml(html);
+//    if (!m_pageHeaders[pageNumber])
+//        m_pageHeaders[pageNumber] = new QTextDocument;
+//    m_pageHeaders[pageNumber]->setHtml(html);
 }
 
-void QPrinterEasyPrivate::setFooter( const QString &html, QPrinterEasy::Presence p )
+void QPrinterEasyPrivate::setFooter( const QString &html, QPrinterEasy::Presence presence, QPrinterEasy::Priority prior )
 {
-    switch (p) {
-    case QPrinterEasy::EachPages:
-        if (!m_footer)
-            m_footer = new QTextDocument;
-        m_footer->setHtml( html );
-        break;
-    case QPrinterEasy::FirstPageOnly:
-        setFooter( html, 1 );
-        break;
-    case QPrinterEasy::SecondPageOnly:
-        setFooter( html, 2 );
-        break;
-    case QPrinterEasy::LastPageOnly:
-        setFooter( html, -1 );
-        break;
-    }
+//    QTextDocumentHeader *doc = new QTextDocumentHeader(html);
+//    doc->setPresence( presence );
+//    doc->setPriority( prior );
+//    m_Footers.append( doc );
 }
 
 void QPrinterEasyPrivate::setFooter( const QString & html, int pageNumber )
 {
-    if (!m_pageFooters[pageNumber])
-        m_pageFooters[pageNumber] = new QTextDocument;
-    m_pageFooters[pageNumber]->setHtml(html);
+//    if (!m_pageFooters[pageNumber])
+//        m_pageFooters[pageNumber] = new QTextDocument;
+//    m_pageFooters[pageNumber]->setHtml(html);
 }
 
 QRectF QPrinterEasyPrivate::rotatedBoundingRect(const QRectF &rect, int rotation)
@@ -548,6 +620,8 @@ QPrinterEasy::QPrinterEasy( QObject * parent )
 
 QPrinterEasy::~QPrinterEasy()
 {
+    clearHeaders();
+    clearFooters();
     if (d) delete d;
     d = 0;
 }
@@ -562,9 +636,13 @@ bool QPrinterEasy::askForPrinter( QWidget *parent )
     return false;
 }
 
-void QPrinterEasy::setHeader( const QString & html, Presence p )
+void QPrinterEasy::setHeader( const QString & html, Presence presence, QPrinterEasy::Priority prior )
 {
-    d->setHeader( html, p );
+    QTextDocumentHeader *doc = new QTextDocumentHeader;
+    doc->setHtml(html);
+    doc->setPresence( presence );
+    doc->setPriority( prior );
+    d->m_Headers.append(doc);
 }
 
 void QPrinterEasy::setHeader( const QString & html, int pageNumber )
@@ -572,9 +650,13 @@ void QPrinterEasy::setHeader( const QString & html, int pageNumber )
     d->setHeader( html, pageNumber );
 }
 
-void QPrinterEasy::setFooter( const QString & html, Presence p )
+void QPrinterEasy::setFooter( const QString & html, Presence presence, QPrinterEasy::Priority prior )
 {
-    d->setFooter( html, p );
+    QTextDocumentHeader *doc = new QTextDocumentHeader;
+    doc->setHtml(html);
+    doc->setPresence( presence );
+    doc->setPriority( prior );
+    d->m_Footers.append(doc);
 }
 
 void QPrinterEasy::setFooter( const QString & html, int pageNumber )
@@ -647,6 +729,7 @@ bool QPrinterEasy::print( QPrinter *printer )
 
 void QPrinterEasy::addWatermarkPixmap( const QPixmap & pix, const Presence p , const Qt::AlignmentFlag watermarkAlign)
 {
+    // TODO TO TEST
     if ( ! d->m_Printer )
         return;
     d->m_WatermarkPresence = p;
