@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     QString header = readEntireFile(dir.filePath("header.html"));
     QString header2 = readEntireFile(dir.filePath("header_2.html"));
     QString footer = readEntireFile(dir.filePath("footer.html"));
+    QString footer2 = readEntireFile(dir.filePath("footer_2.html"));
     QString watermark = readEntireFile(dir.filePath("watermark.html"));
     QString document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
 
@@ -74,6 +75,8 @@ int main(int argc, char *argv[])
     pe.setHeader( header, QPrinterEasy::FirstPageOnly );
     pe.setHeader( header2, QPrinterEasy::EachPages );
     pe.setFooter( footer );
+    pe.setFooter( footer2 );
+//    pe.setFooter( footer );
     pe.setContent( document );
     pe.previewDialog();
 
