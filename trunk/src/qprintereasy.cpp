@@ -134,7 +134,7 @@ bool QPrinterEasy::useDefaultPrinter()
 bool QPrinterEasy::previewDialog( QWidget *parent, bool test )
 {
     if (!d->m_Printer)
-        return false;
+		d->renewPrinter();
 
 #ifdef QPRINTEREASY_DEBUG
     // For test
@@ -301,27 +301,3 @@ void QPrinterEasy::addWatermarkText( const QString & plainText,
     painter.restore();
     painter.end();
 }
-
-
-int QPrinterEasyPrivate::calculateWatermarkRotation( QRectF & textRect, const QRectF pageRect, const Qt::Alignment watermarkAlignment )
-{
-    int angle = 0;
-    if ( ( watermarkAlignment == (Qt::AlignHCenter | Qt::AlignVCenter) ) || (watermarkAlignment == Qt::AlignCenter ) ) {
-        textRect.moveCenter( pageRect.center() );
-        angle = medianAngle( pageRect );
-    } else if (watermarkAlignment == Qt::AlignBottom) {
-        textRect.moveTop( pageRect.bottom() - textRect.height() );
-        angle = 0;
-    } else if (watermarkAlignment == Qt::AlignTop) {
-        textRect.moveTop( pageRect.top() );
-        angle = 0;
-    } else if (watermarkAlignment == Qt::AlignRight) {
-        textRect.moveCenter( QPointF(pageRect.height() - (textRect.width()/1.5), pageRect.center().y()) );
-        angle = 90;
-    } else if (watermarkAlignment == Qt::AlignLeft) {
-        textRect.moveCenter( QPointF( (textRect.width()/2), pageRect.center().y()) );
-        angle = 270;
-    }
-    return angle;
-}
-

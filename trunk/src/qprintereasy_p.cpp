@@ -313,7 +313,7 @@ bool QPrinterEasyPrivate::simpleDraw()
 
     QPainter painter(m_Printer);
     int pageNumber = 0;
-
+	
     // moving into Painter : go under the header
     painter.save();
     painter.translate(0, headerSize.height());
@@ -474,5 +474,27 @@ QRectF QPrinterEasyPrivate::rotatedBoundingRect(const QRectF &rect, int rotation
     transform.rotate(rotation);
     polygon = polygon * transform;
     return polygon.boundingRect().translated(rect.center());
+}
+
+int QPrinterEasyPrivate::calculateWatermarkRotation( QRectF & textRect, const QRectF pageRect, const Qt::Alignment watermarkAlignment )
+{
+    int angle = 0;
+    if ( ( watermarkAlignment == (Qt::AlignHCenter | Qt::AlignVCenter) ) || (watermarkAlignment == Qt::AlignCenter ) ) {
+        textRect.moveCenter( pageRect.center() );
+        angle = medianAngle( pageRect );
+    } else if (watermarkAlignment == Qt::AlignBottom) {
+        textRect.moveTop( pageRect.bottom() - textRect.height() );
+        angle = 0;
+    } else if (watermarkAlignment == Qt::AlignTop) {
+        textRect.moveTop( pageRect.top() );
+        angle = 0;
+    } else if (watermarkAlignment == Qt::AlignRight) {
+        textRect.moveCenter( QPointF(pageRect.height() - (textRect.width()/1.5), pageRect.center().y()) );
+        angle = 90;
+    } else if (watermarkAlignment == Qt::AlignLeft) {
+        textRect.moveCenter( QPointF( (textRect.width()/2), pageRect.center().y()) );
+        angle = 270;
+    }
+    return angle;
 }
 
