@@ -22,14 +22,11 @@ CONFIG( debug, debug|release ) {
   mac:CONFIG  -= ppc
   unix:PACKAGE_TARGET   = $$quote($$join(PACKAGE_TARGET,,,_debug))
   else:PACKAGE_TARGET   = $$quote($$join(PACKAGE_TARGET,,,_d))
-  DEFINES  *= DEBUG
+  DEFINES  *= QPRINTEREASY_DEBUG
 } else {
   #Release
   message( Building in RELEASE )
-  DEFINES   *= RELEASE \
-               QT_NO_DEBUG_OUTPUT \
-               QT_NO_WARNING_OUTPUT \
-               QT_NO_DEBUG
+  DEFINES   *= QPRINTEREASY_RELEASE
 }
 
 # define objects, ui, rcc building path
