@@ -105,7 +105,6 @@ QPrinter *QPrinterEasy::printer()
     return d->m_Printer;
 }
 
-
 void QPrinterEasy::setHeader( const QString & html, Presence presence, QPrinterEasy::Priority prior )
 {
     QTextDocumentHeader *doc = new QTextDocumentHeader;
@@ -187,15 +186,41 @@ bool QPrinterEasy::print( QPrinter *printer )
     return d->draw();
 }
 
-void QPrinterEasy::addWatermarkPixmap( const QPixmap & pix, const Presence p , const Qt::AlignmentFlag watermarkAlign)
+void QPrinterEasy::addWatermarkPixmap( const QPixmap & pix, const Presence p , const Qt::AlignmentFlag watermarkAlignment )
 {
-    // TODO TO TEST
     if ( ! d->m_Printer )
         return;
     d->m_WatermarkPresence = p;
-    // TODO page margins, calculate rotation of the pixmap ?
-    Q_UNUSED(watermarkAlign);
-    d->m_Watermark = pix;
+    QRectF pageRect = d->m_Printer->pageRect();
+
+    // prepare watermark pixmap
+    d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
+    d->m_Watermark.fill();
+
+    // TODO page margins
+    // TODO manageDPI of pixmap
+    QRectF pixRect = pix.rect();
+    int rotationAngle = d->calculateWatermarkRotation( pixRect, pageRect, watermarkAlignment );
+
+    // Prepare painter
+    QPainter painter;
+    painter.begin( &d->m_Watermark );
+    painter.translate( -pageRect.topLeft() );  // TODO : this is wrong because we loose the margins
+    painter.save();
+    // rotate the painter from its middle
+    if ( rotationAngle != 0 ) {
+        painter.translate( pixRect.center() );
+        painter.rotate( rotationAngle );
+        // scale textRect to feet inside the pageRect - margins
+        QRectF boundingRect = d->rotatedBoundingRect(pixRect, rotationAngle);
+        double scale = qMin( pageRect.width() / boundingRect.width(), pageRect.height() / boundingRect.height() );
+        painter.scale( scale, scale );
+        painter.translate( -pixRect.center() );
+    }
+    painter.drawRect( pixRect );
+    painter.drawPixmap( pixRect, pix, QRectF() );
+    painter.restore();
+    painter.end();
 }
 
 void QPrinterEasy::addWatermarkHtml( const QString & html,
@@ -244,7 +269,6 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
     painter.translate( textRect.topLeft() );
     wm.drawContents( &painter );//, textRect );
     painter.translate( -textRect.topLeft() );
-    painter.drawRect( textRect );
 
     painter.restore();
     painter.end();
