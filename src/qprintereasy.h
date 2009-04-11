@@ -121,6 +121,9 @@ public:
 
     bool print( const QTextDocument & docToPrint );
 
+    void setOrientation(QPrinter::Orientation orientation);
+    void setPaperSize(QPrinter::PaperSize size);
+
 protected Q_SLOTS:
     /** \brief Slot used by the preview dialog. */
     bool print( QPrinter *printer = 0 );  // used by QPrintPreviewDialog
