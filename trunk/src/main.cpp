@@ -73,14 +73,16 @@ int main(int argc, char *argv[])
 
     QPrinterEasy pe;
     pe.askForPrinter();
-    pe.addWatermarkPixmap( pixWatermark, QPrinterEasy::EachPages );
-//    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EvenPages, Qt::AlignCenter );
+//    pe.addWatermarkPixmap( pixWatermark, QPrinterEasy::EachPages );
+    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EvenPages, Qt::AlignCenter );
     pe.setHeader( header );//, QPrinterEasy::FirstPageOnly );
 //    pe.setHeader( header2, QPrinterEasy::EachPages );
     pe.setFooter( footer );
 //    pe.setFooter( footer2 );
 //    pe.setFooter( footer );
     pe.setContent( document );
+    pe.setOrientation(QPrinter::Portrait);
+    pe.setPaperSize(QPrinter::A4);
     pe.previewDialog();
 
     return 0;
