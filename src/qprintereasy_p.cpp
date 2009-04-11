@@ -54,7 +54,7 @@ bool QPrinterEasyPrivate::presenceIsRequiredAtPage( const int page, const int pr
         return true;
     if ( ( presence == QPrinterEasy::OddPages ) && ((page % 2) == 1) )
         return true;
-    if ( ( presence == QPrinterEasy::EventPages ) && ((page % 2) == 0) )
+    if ( ( presence == QPrinterEasy::EvenPages ) && ((page % 2) == 0) )
         return true;
     if ( (presence == QPrinterEasy::FirstPageOnly) && (page==1) )
         return true;
@@ -87,7 +87,7 @@ void QPrinterEasyPrivate::setTextWidth(int width) {
 
 bool QPrinterEasyPrivate::isSimple() const
 {
-    return ((m_Headers.count()==1) && (m_Footers.count()==1) && m_Watermark.isNull());
+    return ((m_Headers.count()==1) && (m_Footers.count()==1) );//&& m_Watermark.isNull());
 }
 
 bool QPrinterEasyPrivate::complexDraw()
@@ -301,37 +301,46 @@ bool QPrinterEasyPrivate::simpleDraw()
 
     QPainter painter(m_Printer);
     int pageNumber = 0;
-	
-    // moving into Painter : go under the header
     painter.save();
+    QRectF headRect = QRectF(QPoint(0,0), headerSize );
     painter.translate(0, headerSize.height());
+	
     while (currentRect.intersects(contentRect)) {
+        // draw watermark if needed
+        if (presenceIsRequiredAtPage(pageNumber+1,m_WatermarkPresence)) {
+            // return to point(0,0) and draw watermark
+            painter.save();
+            painter.translate(0, +currentRect.height()*pageNumber - headerSize.height() );
+            painter.drawPixmap( m_Printer->pageRect().topLeft(), m_Watermark );
+            painter.restore();
+        }
+
         // draw content for this page
         m_content.drawContents(&painter, currentRect);
         pageNumber++;
         currentRect.translate(0, currentRect.height());
-        // moving into Painter : return to the beginning of the page
-        painter.restore();
 
+        // return to the beginning of the page
+        painter.restore();
         // draw header
-        QRectF headRect = QRectF(QPoint(0,0), headerSize );
-        //        painter.drawRect( headRect );
-        if (headerDoc)
+        if (headerDoc) {
+            //        painter.drawRect( headRect );
             headerDoc->drawContents(&painter, headRect );
+        }
 
         // draw footer
-        painter.save();
-        painter.translate(0,m_Printer->pageRect().bottom() - footerSize.height() - 10);
-        QRectF footRect = QRectF(QPoint(0,0), footerSize );
-        //        painter.drawRect( footRect );
-        if (footerDoc)
+        if (footerDoc) {
+            painter.save();
+            painter.translate(0,m_Printer->pageRect().bottom() - footerSize.height() - 10);
+            QRectF footRect = QRectF(QPoint(0,0), footerSize );
+            //        painter.drawRect( footRect );
             footerDoc->drawContents(&painter, footRect);
-        painter.restore();
+            painter.restore();
+        }
 
         // calculate new page
         painter.save();
         painter.translate(0, -currentRect.height() * pageNumber + headerSize.height());
-
         if (currentRect.intersects(contentRect))
             m_Printer->newPage();
     }
