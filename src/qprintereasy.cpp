@@ -92,6 +92,20 @@ bool QPrinterEasy::askForPrinter( QWidget *parent )
     return false;
 }
 
+void QPrinterEasy::setPrinter( QPrinter * printer )
+{
+    if (printer)
+        d->m_Printer = printer;
+    else
+        d->renewPrinter();
+}
+
+QPrinter *QPrinterEasy::printer()
+{
+    return d->m_Printer;
+}
+
+
 void QPrinterEasy::setHeader( const QString & html, Presence presence, QPrinterEasy::Priority prior )
 {
     QTextDocumentHeader *doc = new QTextDocumentHeader;

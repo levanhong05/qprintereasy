@@ -81,6 +81,8 @@ public:
     /** \brief Shows the print dialog */
     bool askForPrinter( QWidget *parent = 0 );
     bool useDefaultPrinter();
+    void setPrinter( QPrinter * printer );
+    QPrinter *printer();
 
     /** \brief Shows the preview dialog. test param should only be used for debugging. */
     bool previewDialog( QWidget *parent = 0, bool test = false );
