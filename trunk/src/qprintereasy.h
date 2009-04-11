@@ -62,7 +62,7 @@ public:
         LastPageOnly,
         ButFirstPage,
         OddPages,  // pages impaires
-        EventPages // pages paires
+        EvenPages  // pages paires
     };
 
     enum Priority {
