@@ -110,7 +110,7 @@ private:
 public:
     QPixmap m_Watermark; // null watermark at constructor time
     int m_WatermarkPresence;
-    QPrinter *m_Printer;
+    QPrinter *m_Printer;  // TODO transform to QPointer<QPrinter> because it can be deleted by user
     QList< QPointer<QTextDocumentHeader> > m_Headers;
     QList< QPointer<QTextDocumentHeader> > m_Footers;
 
