@@ -79,25 +79,13 @@ void QPrinterEasyPrivate::renewPrinter()
 
 void QPrinterEasyPrivate::setTextWidth(int width) {
     m_content.setTextWidth(width);
-    // OBSOLETE
-//    if (m_header)
-//        m_header->setTextWidth(width);
-//    if (m_footer)
-//        m_footer->setTextWidth(width);
-//    foreach (QTextDocument *doc, m_pageHeaders)
-//        doc->setTextWidth(width);
-//    foreach (QTextDocument *doc, m_pageFooters)
-//        doc->setTextWidth(width);
-    // END OBSOLETE
     foreach (QTextDocument *doc, m_Headers)
         doc->setTextWidth(width);
     foreach (QTextDocument *doc, m_Footers)
         doc->setTextWidth(width);
-
-
 }
 
-bool QPrinterEasyPrivate::isSimple() const // { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
+bool QPrinterEasyPrivate::isSimple() const
 {
     return ((m_Headers.count()==1) && (m_Footers.count()==1) && m_Watermark.isNull());
 }
@@ -370,28 +358,14 @@ QList<QTextDocumentHeader*> QPrinterEasyPrivate::headers( int pageNumber )
             list << doc;
     }
     return list;
-//
-//    // if header was setted ForEachPages
-//    if (m_header)
-//        return m_header;
-//    // else return from map
-//    if (m_pageHeaders.find(pageNumber) == m_pageHeaders.end())
-//        return m_header;
-//    return m_pageHeaders[pageNumber];
 }
 
 QTextDocument *QPrinterEasyPrivate::header(QPrinterEasy::Presence p)
 {
-//    // TODO : OBSOLETE
-//    switch (p) {
-//    case QPrinterEasy::EachPages: return m_header;
-//    case QPrinterEasy::FirstPageOnly: return header(1);
-//    case QPrinterEasy::SecondPageOnly: return header(2);
-//    case QPrinterEasy::LastPageOnly: return header(-1);
-//    default: return 0;
-//    }
-
-    return 0;
+    // this function should only be used by simpleDraw
+    if (m_Headers.count() < 1)
+        return 0;
+    return m_Headers.at(0);
 }
 
 QList<QTextDocumentHeader*> QPrinterEasyPrivate::footers(int pageNumber)
@@ -404,67 +378,16 @@ QList<QTextDocumentHeader*> QPrinterEasyPrivate::footers(int pageNumber)
             list << doc;
     }
     return list;
-//    if (m_pageFooters.find(pageNumber) == m_pageFooters.end())
-//        return m_footer;
-//    return m_pageFooters[pageNumber];
 }
 
 QTextDocument *QPrinterEasyPrivate::footer(QPrinterEasy::Presence p)
 {
-//    switch (p) {
-//    case QPrinterEasy::EachPages: return m_footer;
-//    case QPrinterEasy::FirstPageOnly: return footer(1);
-//    case QPrinterEasy::SecondPageOnly: return footer(2);
-//    case QPrinterEasy::LastPageOnly: return footer(-1);
-//    default: return 0;
-//    }
+    // this function should only be used by simpleDraw
+    if (m_Footers.count() < 1)
+        return 0;
+    return m_Footers.at(0);
 }
 
-void QPrinterEasyPrivate::setHeader( const QString & html, QPrinterEasy::Presence presence, QPrinterEasy::Priority prior )
-{
-//    switch (p) {
-//    case QPrinterEasy::EachPages:
-//        if (!m_header)
-//            m_header = new QTextDocument;
-//        m_header->setHtml( html );
-//        break;
-//    case QPrinterEasy::FirstPageOnly:
-//        setHeader( html, 1 );
-//        break;
-//    case QPrinterEasy::SecondPageOnly:
-//        setHeader( html, 2 );
-//        break;
-//    case QPrinterEasy::LastPageOnly:
-//        setHeader( html, -1 );
-//        break;
-//    }
-//    QTextDocumentHeader *doc = new QTextDocumentHeader(html);
-//    doc->setPresence( presence );
-//    doc->setPriority( prior );
-//    m_Headers.append(doc);// << QPointer<QTextDocumentHeader>(doc) ;
-}
-
-void QPrinterEasyPrivate::setHeader( const QString & html, int pageNumber )
-{
-//    if (!m_pageHeaders[pageNumber])
-//        m_pageHeaders[pageNumber] = new QTextDocument;
-//    m_pageHeaders[pageNumber]->setHtml(html);
-}
-
-void QPrinterEasyPrivate::setFooter( const QString &html, QPrinterEasy::Presence presence, QPrinterEasy::Priority prior )
-{
-//    QTextDocumentHeader *doc = new QTextDocumentHeader(html);
-//    doc->setPresence( presence );
-//    doc->setPriority( prior );
-//    m_Footers.append( doc );
-}
-
-void QPrinterEasyPrivate::setFooter( const QString & html, int pageNumber )
-{
-//    if (!m_pageFooters[pageNumber])
-//        m_pageFooters[pageNumber] = new QTextDocument;
-//    m_pageFooters[pageNumber]->setHtml(html);
-}
 
 QRectF QPrinterEasyPrivate::rotatedBoundingRect(const QRectF &rect, int rotation)
 {
