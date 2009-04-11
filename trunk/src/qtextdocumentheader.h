@@ -28,11 +28,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS  *
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                   *
  **********************************************************************************/
- 
-///////////////////////////////////////////////////////////
-///////////// QTextDocumentHeader /////////////////////////
-///////////////////////////////////////////////////////////
+#ifndef QTEXTDOCUMENTHEADER_H
+#define QTEXTDOCUMENTHEADER_H
 
+#include <qprintereasy.h>
+#include <QTextDocument>
 
 class QTextDocumentHeader : public QTextDocument
 {
@@ -51,3 +51,5 @@ private:
     QPrinterEasy::Presence  m_Presence;
     QPrinterEasy::Priority  m_Priority;
 };
+
+#endif // QTEXTDOCUMENTHEADER_H

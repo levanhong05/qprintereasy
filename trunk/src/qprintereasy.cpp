@@ -101,11 +101,6 @@ void QPrinterEasy::setHeader( const QString & html, Presence presence, QPrinterE
     d->m_Headers.append(doc);
 }
 
-void QPrinterEasy::setHeader( const QString & html, int pageNumber )
-{
-    d->setHeader( html, pageNumber );
-}
-
 void QPrinterEasy::setFooter( const QString & html, Presence presence, QPrinterEasy::Priority prior )
 {
     QTextDocumentHeader *doc = new QTextDocumentHeader;
@@ -113,11 +108,6 @@ void QPrinterEasy::setFooter( const QString & html, Presence presence, QPrinterE
     doc->setPresence( presence );
     doc->setPriority( prior );
     d->m_Footers.append(doc);
-}
-
-void QPrinterEasy::setFooter( const QString & html, int pageNumber )
-{
-    d->setFooter( html, pageNumber );
 }
 
 void QPrinterEasy::setContent( const QString & html )
@@ -134,7 +124,7 @@ bool QPrinterEasy::useDefaultPrinter()
 bool QPrinterEasy::previewDialog( QWidget *parent, bool test )
 {
     if (!d->m_Printer)
-		d->renewPrinter();
+        d->renewPrinter();
 
 #ifdef QPRINTEREASY_DEBUG
     // For test

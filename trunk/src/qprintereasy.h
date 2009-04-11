@@ -44,10 +44,10 @@ class QTextDocumentHeader;
 #include <QColor>
 
 /**
- * \file QPrinterEasy.h
+ * \file qprintereasy.h
  * \author QPrinterEasy Team
- * \version 0.0.5
- * \date April 10 2009
+ * \version 0.0.6
+ * \date April 11 2009
 */
 
 class Q_QPRINTEREASY_EXPORT QPrinterEasy : public QObject
@@ -89,19 +89,9 @@ public:
     void setHeader( const QString & html, Presence p = EachPages, QPrinterEasy::Priority prior = First );
     void clearHeaders();
 
-    /** \brief Set a header for a particular page
-         * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
-         */
-    void setHeader( const QString & html, int pageNumber );
-
     /** \brief Set a footer for a special page */
     void setFooter( const QString & html, Presence p = EachPages, QPrinterEasy::Priority prior = First );
     void clearFooters();
-
-    /** \brief Set a footer for a particular page
-         * pageNumber can be -1, -2, etc. In this case it represents respectively the last page, the penultimate, etc
-         */
-    void setFooter( const QString & html, int pageNumber );
 
     /** \brief Set the main text to print/ */
     void setContent( const QString & html );

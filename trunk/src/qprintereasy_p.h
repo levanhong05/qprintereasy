@@ -28,6 +28,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS  *
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                   *
  **********************************************************************************/
+#ifndef QPRINTEREASYPRIVATE_H
+#define QPRINTEREASYPRIVATE_H
 
 #include <QPainter>
 #include <QRectF>
@@ -45,13 +47,18 @@
 #include "qprintereasy.h"
 #include "qtextdocumentheader.h"
 
+/**
+ * \file qprintereasy_p.h
+ * \author QPrinterEasy Team
+ * \version 0.0.6
+ * \date April 11 2009
+*/
 
 /** \brief Only keeps some private members and private datas */
 class QPrinterEasyPrivate
 {
 public:
-    QPrinterEasyPrivate()
-                : m_Printer(0) {}//, m_header(0), m_footer(0) {}
+    QPrinterEasyPrivate() : m_Printer(0) {}
     ~QPrinterEasyPrivate();
 
     QTextDocument &content() { return m_content; }
@@ -59,12 +66,6 @@ public:
     QTextDocument *header(QPrinterEasy::Presence p); // Returns 0 if there is no header for the presence
     QList<QTextDocumentHeader*> footers(int pageNumber);
     QTextDocument *footer(QPrinterEasy::Presence p); // Returns 0 if there is no footer for the presence
-
-    void setHeader( const QString & html, QPrinterEasy::Presence p, QPrinterEasy::Priority prior );
-    void setHeader( const QString & html, int pageNumber );
-
-    void setFooter( const QString & html, QPrinterEasy::Presence p, QPrinterEasy::Priority prior );
-    void setFooter( const QString & html, int pageNumber );
 
     // Affect the width in argument to all QTextDocument
     void setTextWidth(int width);
@@ -99,7 +100,7 @@ public:
 
 private:
     // use simpleDraw or complexDraw method ?
-    bool isSimple() const;// { return m_pageHeaders.isEmpty() && m_pageFooters.isEmpty() && m_Watermark.isNull(); }
+    bool isSimple() const;
 
     // simpleDraw method
     bool simpleDraw();
@@ -115,9 +116,7 @@ public:
 
 private:
     QTextDocument m_content;                             // TODO transform to QPointer<QTextDocument> ?
-//    QPointer<QTextDocument> m_header, m_footer;          // TODO this should become obsolete
-//    QMap<int, QPointer<QTextDocument> > m_pageHeaders;   // TODO --> QSet< QPointer<QTextDocumentHeader> >
-//    QMap<int, QPointer<QTextDocument> > m_pageFooters;   // TODO --> QSet< QPointer<QTextDocumentHeader> >
-
-
 };
+
+#endif //  QPRINTEREASYPRIVATE_H
+
