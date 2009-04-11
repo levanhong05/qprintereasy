@@ -57,6 +57,8 @@ int main(int argc, char *argv[])
     QString footer = readEntireFile(dir.filePath("footer.html"));
     QString footer2 = readEntireFile(dir.filePath("footer_2.html"));
     QString watermark = readEntireFile(dir.filePath("watermark.html"));
+    QPixmap pixWatermark;
+    pixWatermark.load( dir.filePath("pixmapWatermark.png") );
     QString document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
 
 //    QTextDocument td(document);
@@ -71,11 +73,12 @@ int main(int argc, char *argv[])
 
     QPrinterEasy pe;
     pe.askForPrinter();
-    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EventPages, Qt::AlignLeft );
-    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
-    pe.setHeader( header2, QPrinterEasy::EachPages );
+    pe.addWatermarkPixmap( pixWatermark, QPrinterEasy::EachPages );
+//    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EvenPages, Qt::AlignCenter );
+    pe.setHeader( header );//, QPrinterEasy::FirstPageOnly );
+//    pe.setHeader( header2, QPrinterEasy::EachPages );
     pe.setFooter( footer );
-    pe.setFooter( footer2 );
+//    pe.setFooter( footer2 );
 //    pe.setFooter( footer );
     pe.setContent( document );
     pe.previewDialog();
