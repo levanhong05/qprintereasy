@@ -88,6 +88,25 @@
     pe.previewDialog();
 }}}
 
+  ==Header and footer with a pixmap watermark on EachPages==
+
+  * [http://qprintereasy.googlecode.com/svn/trunk/bin/pixmapWatermark.png Here is the watermark pixmap]
+  * [http://qprintereasy.googlecode.com/svn/trunk/bin/withPixmapWatermark.pdf Here is the result]
+
+{{{
+    // Code looks like this
+    QPixmap pixWatermark;
+    pixWatermark.load( dir.filePath("pixmapWatermark.png") );
+
+    QPrinterEasy pe;
+    pe.askForPrinter();
+    pe.setHeader( header );
+    pe.setFooter( footer );
+    pe.setContent( document );
+    pe.addWatermarkPixmap( pixWatermark, QPrinterEasy::EachPages );
+    pe.previewDialog();
+}}}
+
   ==MultiHeaders, one footer, watermark on EvenPages ==
 
   * [http://qprintereasy.googlecode.com/svn/trunk/bin/twoHeaders.pdf sample]
