@@ -38,6 +38,7 @@
 #include <QPrintDialog>
 #include <QSizeF>
 #include <QPointer>
+#include <QPrinterInfo>
 
 // For test
 #include <QTextBrowser>
@@ -130,7 +131,15 @@ void QPrinterEasy::setContent( const QString & html )
 
 bool QPrinterEasy::useDefaultPrinter()
 {
-    // TODO
+    // TODO : to test
+    QPrinterInfo def = QPrinterInfo::defaultPrinter();
+    if (def.isNull)
+        return false;
+    if (d->m_Printer) {
+        delete d->m_Printer;
+        d->m_Printer = 0;
+    }
+    d->m_Printer = new QPrinter(def, QPrinter::PrinterResolution);
     return true;
 }
 
