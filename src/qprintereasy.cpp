@@ -138,7 +138,9 @@ void QPrinterEasy::setOrientation(QPrinter::Orientation orientation)
 {
     if (!d->m_Printer)
         d->renewPrinter();
-	d->m_Printer->setOrientation(orientation);
+    d->m_Printer->setOrientation(orientation);
+    // TODO Manage Margins
+    d->setTextWidth( d->m_Printer->pageSize().width() );
 }
 
 void QPrinterEasy::setPaperSize(QPrinter::PaperSize size)
@@ -146,6 +148,8 @@ void QPrinterEasy::setPaperSize(QPrinter::PaperSize size)
 	if (!d->m_Printer)
 		d->renewPrinter();
 	d->m_Printer->setPaperSize(size);
+    // TODO Manage Margins
+    d->setTextWidth( d->m_Printer->pageSize().width() );
 }
 
 bool QPrinterEasy::previewDialog( QWidget *parent, bool test )
