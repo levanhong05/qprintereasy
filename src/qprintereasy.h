@@ -33,7 +33,8 @@
 
 #include "qprintereasy_global.h"
 class QPrinterEasyPrivate;
-class QTextDocumentHeader;
+class QTextDocumentExtra;
+class QPrinterEasyPreviewer;
 
 #include <QObject>
 #include <QFlags>
@@ -42,19 +43,23 @@ class QTextDocumentHeader;
 #include <QPrinter>
 #include <QFont>
 #include <QColor>
+#include <QWidget>
+
+QT_BEGIN_NAMESPACE
+class QTextEdit;
+QT_END_NAMESPACE
 
 /**
  * \file qprintereasy.h
  * \author QPrinterEasy Team
- * \version 0.0.6
- * \date April 11 2009
+ * \version 0.0.8
+ * \date June 24 2009
 */
 
 class Q_QPRINTEREASY_EXPORT QPrinterEasy : public QObject
 {
     Q_OBJECT
 public:
-    /** \brief This enum is used to define the presence of headers, footers, watermarks */
     enum Presence {
         EachPages = 0,
         FirstPageOnly,
@@ -62,8 +67,21 @@ public:
         LastPageOnly,
         ButFirstPage,
         OddPages,  // pages impaires
-        EvenPages  // pages paires
+        EvenPages,  // pages paires
+        DuplicataOnly
     };
+    static QStringList presencesAvailable()
+    {
+        return QStringList()
+                << tr("Each Pages")
+                << tr("First page only")
+                << tr("Second page only")
+                << tr("Last page only")
+                << tr("All pages but first")
+                << tr("Odd pages")
+                << tr("Even pages")
+                << tr("Duplicatas only");
+    }
 
     enum Priority {
         First = 0,
@@ -72,39 +90,32 @@ public:
         Quater
     };
 
-    /** \brief Class instanciation.
-      *
-      */
     QPrinterEasy( QObject * parent = 0 );
     ~QPrinterEasy();
 
-    /** \brief Shows the print dialog */
     bool askForPrinter( QWidget *parent = 0 );
     bool useDefaultPrinter();
     void setPrinter( QPrinter * printer );
     QPrinter *printer();
 
-    /** \brief Shows the preview dialog. test param should only be used for debugging. */
     bool previewDialog( QWidget *parent = 0, bool test = false );
 
-    /** \brief Set a header for a special page */
     void setHeader( const QString & html, Presence p = EachPages, QPrinterEasy::Priority prior = First );
     void clearHeaders();
 
-    /** \brief Set a footer for a special page */
     void setFooter( const QString & html, Presence p = EachPages, QPrinterEasy::Priority prior = First );
     void clearFooters();
 
-    /** \brief Set the main text to print/ */
     void setContent( const QString & html );
 
+    void setOrientation(QPrinter::Orientation orientation);
+    void setPaperSize(QPrinter::PaperSize size);
 
-    // Watermark management
+public Q_SLOTS:
     void addWatermarkPixmap( const QPixmap & pix,
                              const Presence p = EachPages,
                              const Qt::AlignmentFlag alignement = Qt::AlignCenter);
 
-    /** \brief Add a plain text watermark to pages. */
     void addWatermarkText( const QString & plainText,
                            const Presence p = EachPages,
                            const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
@@ -113,23 +124,84 @@ public:
                            const QColor & color = QColor("lightgrey"),
                            const int orientation = -1 );
 
-    /** \brief Add a Html watermark to pages. */
     void addWatermarkHtml( const QString & html,
                            const Presence p = EachPages,
                            const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
                            const int orientation = -1 );
 
-    bool print( const QTextDocument & docToPrint );
+    static QPrinterEasyPreviewer *previewer( QWidget *parent );
 
-    void setOrientation(QPrinter::Orientation orientation);
-    void setPaperSize(QPrinter::PaperSize size);
+    void previewToPixmap( QPixmap &drawTo, QPrinter *printer );
+
+    void previewHeaderFooter( QPixmap &drawTo,
+                              const QString &headerHtml,
+                              const QString &footerHtml );
+
+    static void previewDocumentWatermark( QPixmap &drawTo,
+                                       QTextDocument *doc,
+                                      const Presence p = EachPages,
+                                      const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
+                                      const int orientation = -1 );
+    static void previewHtmlWatermark( QPixmap &drawTo,
+                                      const QString & html,
+                                      const Presence p = EachPages,
+                                      const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
+                                      const int orientation = -1 );
+    static void previewTextWatermark( QPixmap &drawTo,
+                                      const QString & plainText,
+                                      const Presence p = EachPages,
+                                      const Qt::Alignment watermarkAlignment = Qt::AlignCenter,
+                                      const int orientation = -1 );
+
+    void clearWatermark();
+
+    bool print( const QTextDocument & docToPrint );
+    bool printWithDuplicata( bool state = true );
+    bool print( const QString &htmlToPrint );
 
 protected Q_SLOTS:
-    /** \brief Slot used by the preview dialog. */
-    bool print( QPrinter *printer = 0 );  // used by QPrintPreviewDialog
+    bool print( QPrinter *printer = 0 );  // used by QPrinterEasy PreviewDialog
 
 private:
     QPrinterEasyPrivate *d;
+};
+
+
+class Q_QPRINTEREASY_EXPORT QPrinterEasyPreviewer : public QWidget
+{
+    Q_OBJECT
+    Q_DISABLE_COPY(QPrinterEasyPreviewer)
+    Q_PROPERTY(QString htmlHeader  READ headerToHtml WRITE setHeader USER true)
+    Q_PROPERTY(QString htmlFooter  READ footerToHtml WRITE setFooter USER true)
+
+//    Q_PROPERTY(QVariant extraDoc  READ extraDocument  WRITE setExtraDocument   USER true)
+
+public:
+    explicit QPrinterEasyPreviewer(QWidget *parent = 0) : QWidget(parent) {}
+    virtual void initialize() = 0;
+
+    virtual void setHeader(const QString &html, QPrinterEasy::Presence p = QPrinterEasy::EachPages) = 0;
+    virtual void setFooter(const QString &html, QPrinterEasy::Presence p = QPrinterEasy::EachPages) = 0;
+    virtual void setWatermark(const QString &html, QPrinterEasy::Presence p = QPrinterEasy::EachPages) = 0;
+
+    virtual void setHeader(const QTextDocumentExtra *extra) = 0;
+    virtual void setFooter(const QTextDocumentExtra *extra) = 0;
+    virtual void setWatermark(const QTextDocumentExtra *extra) = 0;
+
+    virtual QTextEdit *headerEditor() = 0;
+    virtual QTextEdit *footerEditor() = 0;
+    virtual QTextEdit *watermarkEditor() = 0;
+
+    virtual QString headerToHtml() = 0;
+    virtual QString footerToHtml() = 0;
+    virtual QString watermarkToHtml() = 0;
+    virtual int headerPresence() = 0;
+    virtual int footerPresence() = 0;
+    virtual int watermarkPresence() = 0;
+
+    virtual void headerToPointer(QTextDocumentExtra *extra) = 0;
+    virtual void footerToPointer(QTextDocumentExtra *extra) = 0;
+    virtual void watermarkToPointer(QTextDocumentExtra *extra) = 0;
 };
 
 #endif // QPRINTEREASY_H
