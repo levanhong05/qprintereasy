@@ -628,7 +628,6 @@ bool QPrinterEasyPrivate::simpleDraw()
     this->setTextWidth(_pageWidth);
 
     m_Content->setPageSize( getSimpleDrawContentPageSize() );
-//    qWarning() << getSimpleDrawContentPageSize();
     m_Content->setUseDesignMetrics(true);
 
     // prepare drawing areas
@@ -639,6 +638,10 @@ bool QPrinterEasyPrivate::simpleDraw()
     return simpleDrawToPainter(painter, contentRect);
 }
 
+/**
+  \brief Draws to the painter the headers/footers/watermarks and the content to the QPainter \e painter using the simpleDraw method.
+  \sa simpleDraw(), QPrinterEasy::previewToPixmap()
+*/
 bool QPrinterEasyPrivate::simpleDrawToPainter( QPainter &painter, QRect &contentRect )
 {
     int _pageWidth = contentRect.size().width();
@@ -650,36 +653,37 @@ bool QPrinterEasyPrivate::simpleDrawToPainter( QPainter &painter, QRect &content
     QRect currentRect = contentRect;
 
     while (currentRect.intersects(contentRect)) {
+        // at the beginning of the while, painter is translated to the 0,0 position of the new page
         simpleDrawWatermark( painter, pageNumber );
         currentRect = simpleDrawHeaderFooter( painter, headerSize, footerSize, pageNumber );
 
         // draw content for this page
         simpleDrawContent(painter, headerSize, currentRect, drawnedHeight);
-//        qWarning() << painter.clipRegion() << painter.window();
-//        m_Content->setPageSize( QSizeF(_pageWidth, drawnedHeight + currentRect.height() -10 ) );
 
         // calculate new page
         // go to content next page
         if (m_WithDuplicata) {
             if (m_PrintingDuplicata) {
                 drawnedHeight += currentRect.height();
+                // duplicata is drawn --> translate the currentRect to the beginning of the next page
                 currentRect.translate(0, currentRect.height() );
                 pageNumber++;
             }
             m_PrintingDuplicata=!m_PrintingDuplicata;
         } else {
             drawnedHeight += currentRect.height();
+            // translate the currentRect to the beginning of the next page
             currentRect.translate(0, currentRect.height());
             pageNumber++;
         }
+
+        // if there is still something to print --> create a newpage to the printer
         if (currentRect.intersects(contentRect))
             m_Printer->newPage();
     }
     painter.end();
     return true;
 }
-
-
 
 /** \brief Deletes all headers. */
 void QPrinterEasy::clearHeaders()
@@ -714,8 +718,8 @@ QPrinterEasy::QPrinterEasy( QObject * parent )
 
 QPrinterEasy::~QPrinterEasy()
 {
-//    clearHeaders();
-//    clearFooters();
+    clearHeaders();
+    clearFooters();
     if (d) delete d;
     d = 0;
 }
