@@ -369,7 +369,7 @@ private:
     void simpleDrawWatermark( QPainter &painter, const int pageNumber )
     {
         // Add watermark, painter must be translated to the beginning of the page before
-        if (presenceIsRequiredAtPage(pageNumber+1, m_WatermarkPresence)) {
+        if (presenceIsRequiredAtPage(pageNumber, m_WatermarkPresence)) {
             painter.save();
             painter.drawPixmap( m_Printer->pageRect().topLeft(), m_Watermark );
             painter.restore();
@@ -647,7 +647,7 @@ bool QPrinterEasyPrivate::simpleDrawToPainter( QPainter &painter, QRect &content
     int _pageWidth = contentRect.size().width();
     QSizeF headerSize(_pageWidth, 0);
     QSizeF footerSize(_pageWidth, 0);
-    int pageNumber = 0;
+    int pageNumber = 1;
     int drawnedHeight = 0;
     QRectF headRect = QRectF(QPoint(0,0), headerSize );
     QRect currentRect = contentRect;
