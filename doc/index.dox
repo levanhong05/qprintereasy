@@ -19,15 +19,14 @@
 
    \section authors Authors and contributors
     - Creator and Main author :
-        - Éric Maeker, MD <a href="mailto:eric.maeker@free.fr"><eric.maeker@free.fr></a> : Main manager.
+        - Éric Maeker, MD <a href="mailto:eric.maeker@free.fr"><eric.maeker@free.fr></a>
 
     - Main Contributors :
-        - Guillaume Denry <guillaume.denry@gmail.com> : coder, debugger, informatic advisor
-        - Jourdan Romain  <No@Mail.com> : coder helper on printer engine
+        - Guillaume Denry <guillaume.denry@gmail.com>
+        - Jourdan Romain  <No@Mail.com>
 
     - Contributors :
-        - Filipe Azevedo <pasnox@gmail.com> : coder helper, debugger helper, Qt advisor.
-        - David Geldreich <david.geldreich@free.fr> : C++ advisor,
+        - Filipe Azevedo <pasnox@gmail.com>
         - Wathek Loued
         - Aurelien Michon
 
