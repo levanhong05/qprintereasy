@@ -31,7 +31,7 @@
 #ifndef QTEXTDOCUMENTEXTRA_H
 #define QTEXTDOCUMENTEXTRA_H
 
-#include "qprintereasy_global.h"
+#include <qprintereasy_global.h>
 #include <qprintereasy.h>
 
 #include <QVariant>

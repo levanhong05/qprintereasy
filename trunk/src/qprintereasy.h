@@ -31,7 +31,7 @@
 #ifndef QPRINTEREASY_H
 #define QPRINTEREASY_H
 
-#include "qprintereasy_global.h"
+#include <qprintereasy_global.h>
 class QPrinterEasyPrivate;
 class QTextDocumentExtra;
 class QPrinterEasyPreviewer;
