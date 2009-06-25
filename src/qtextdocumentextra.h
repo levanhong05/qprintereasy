@@ -1,7 +1,7 @@
 /**********************************************************************************
  *   QPrinterEasy                                                                 *
  *   Copyright (C) 2009                                                           *
- *   eric.maeker@free.fr                                                          *
+ *   Main author : eric.maeker@free.fr                                            *
  *                                                                                *
  * Copyright (c) 1998, Regents of the University of California                    *
  * All rights reserved.                                                           *
