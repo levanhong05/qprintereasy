@@ -1,0 +1,67 @@
+/*!
+    \mainpage QPrinterEasy
+    \author    Eric Maeker, MD
+    \version   alpha, svn.
+    \date      22/06/2009
+
+
+    \section introduction Introduction
+
+    QPrinterEasy is a small project that aims to ease the print process of complex document. Complex document can include
+    headers, footers and watermarks.
+
+    QPrinterEasy is an open source free software, released <b>under New BSD License</b>
+    and is available for :
+   - Linux
+   - FreeBSD
+   - MacOs X universal
+   - Windows
+
+   \section authors Authors and contributors
+    - Creator and Main author :
+        - Éric Maeker, MD <a href="mailto:eric.maeker@free.fr"><eric.maeker@free.fr></a> : Main manager.
+
+    - Main Contributors :
+        - Guillaume Denry <guillaume.denry@gmail.com> : coder, debugger, informatic advisor
+        - Jourdan Romain  <No@Mail.com> : coder helper on printer engine
+
+    - Contributors :
+        - Filipe Azevedo <pasnox@gmail.com> : coder helper, debugger helper, Qt advisor.
+        - David Geldreich <david.geldreich@free.fr> : C++ advisor,
+        - Wathek Loued
+        - Aurelien Michon
+
+    -  Public Mailing :
+        -  <a href="mailto:qprintereasy@googlegroups.com">qprintereasy@googlegroups.com</a>
+
+   \section code Code
+    We exclusively use the c++ and <a href="http://www.qtsoftware.com/">Qt4.5 libs (from Nokia)</a> for this project. \n
+    All the code is cross-platform.\n
+
+    If you want to participate send a mail to the mailing list.\n
+
+
+
+    \section build_instructions Build instructions
+
+    \code
+     run qmake -config debug -spec YourSpec app.pro  --> for the demo application
+    \endcode
+
+    \code
+     run qmake -config debug -spec YourSpec QPrinterEasy.pro  --> for the dynamic library build
+    \endcode
+
+   \section adding_to_your_project Adding QPrinterEasy to your project
+
+    - There are two ways :
+        - Add QPrinterEasy as a library
+            - NO SUPPORT
+        - Include QPrinterEasy to your project
+            - Add this to your main project file :
+              \code
+               DEFINES += QPRINTEREASY_LIBRARY
+               include( relative/path/to/contrib/qprintereasy/src.pri )
+              \endcode
+
+*/

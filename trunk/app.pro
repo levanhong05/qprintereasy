@@ -11,4 +11,3 @@ CONFIG -= app_bundle
 
 # This project builds the testing application
 SOURCES *= src/main.cpp
-OTHER_FILES += 
