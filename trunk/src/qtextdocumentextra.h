@@ -33,6 +33,7 @@
 
 #include <qprintereasy_global.h>
 #include <qprintereasy.h>
+class QTextDocumentExtraPrivate;
 
 #include <QVariant>
 
@@ -53,56 +54,28 @@ using namespace QTextDocumentExtraConstants;
 class Q_QPRINTEREASY_EXPORT QTextDocumentExtra
 {
 public:
-    QTextDocumentExtra() : m_Doc(0)
-    {
-        xmlVersion = QDOCUMENT_XML_ACTUALVERSION;
-        m_Html = "";
-        m_Priority = QPrinterEasy::First;
-        m_Presence = QPrinterEasy::EachPages;
-        m_DocCreated = false;
-    }
-
-    QTextDocumentExtra( const QString &html, const int presence = QPrinterEasy::EachPages, const int priority = QPrinterEasy::First, const QString &version = QString::null ) : m_Doc(0)
-    {
-        if (version.isEmpty())
-            xmlVersion = QDOCUMENT_XML_ACTUALVERSION;
-        else
-            xmlVersion = version;
-        m_Priority = QPrinterEasy::Priority(priority);
-        m_Presence = QPrinterEasy::Presence(presence);
-        m_Html = html;
-        m_DocCreated = false;
-    }
-
+    QTextDocumentExtra();
+    QTextDocumentExtra( const QString &html, const int presence = QPrinterEasy::EachPages, const int priority = QPrinterEasy::First, const QString &version = QString::null );
     ~QTextDocumentExtra();
 
-    void setPriority( QPrinterEasy::Priority p )  { m_Priority = p; }
-    void setPresence( QPrinterEasy::Presence p )  { m_Presence = p; }
-    void setHtml( const QString &html)         { m_Html = html; if (m_DocCreated) m_Doc->setHtml(html); }
+    void setPriority( QPrinterEasy::Priority p );
+    void setPresence( QPrinterEasy::Presence p );
+    void setHtml( const QString &html);
 
-    QPrinterEasy::Priority priority() const { return m_Priority; }
-    QPrinterEasy::Presence presence() const { return m_Presence; }
+    QPrinterEasy::Priority priority() const;
+    QPrinterEasy::Presence presence() const;
 
     QTextDocument *document() const;
 
     void setTextWidth( qreal width );
-    bool lessThan( const QTextDocumentExtra *h1, const QTextDocumentExtra *h2 )
-    {
-        /** \todo  ? */
-        return true;
-    }
+    bool lessThan( const QTextDocumentExtra *h1, const QTextDocumentExtra *h2 );
 
     QString toXml() const;
     static QTextDocumentExtra *fromXml(const QString &xml);
     QString toHtml() const;
 
 private:
-    QPrinterEasy::Presence  m_Presence;
-    QPrinterEasy::Priority  m_Priority;
-    QString xmlVersion;
-    QString m_Html;
-    mutable bool m_DocCreated;
-    mutable QTextDocument *m_Doc;
+    QTextDocumentExtraPrivate *d;
 };
 Q_DECLARE_METATYPE(QTextDocumentExtra)
 

@@ -29,6 +29,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                   *
  **********************************************************************************/
 #include "qtextdocumentextra.h"
+#include <qprintereasy.h>
 
 #include <QDomElement>
 #include <QDomDocument>
@@ -37,57 +38,90 @@
   \class QTextDocumentExtra
   \brief This class is used by tkPrinter for header/footer/watermark management.
   Xml structure looks like :\n
-  <tkConstants::QDOCUMENT_GENERAL_XML_TAG> </idem>\n
-    <tkConstants::QDOCUMENT_VERSION_XML_TAG> </idem>\n
-    <tkConstants::QDOCUMENT_PRESENCE_XML_TAG> </idem>\n
-    <tkConstants::QDOCUMENT_PRIORITY_XML_TAG> </idem>\n
-    <tkConstants::QDOCUMENT_EXTRA_XML_TAG> </idem>\n
-    <tkConstants::QDOCUMENT_HTML_XML_TAG> </idem>\n
-  </tkConstants::QDOCUMENT_GENERAL_XML_TAG>\n
+  <QTextDocumentExtraConstants::QDOCUMENT_GENERAL_XML_TAG> </idem>\n
+    <QTextDocumentExtraConstants::QDOCUMENT_VERSION_XML_TAG> </idem>\n
+    <QTextDocumentExtraConstants::QDOCUMENT_PRESENCE_XML_TAG> </idem>\n
+    <QTextDocumentExtraConstants::QDOCUMENT_PRIORITY_XML_TAG> </idem>\n
+    <QTextDocumentExtraConstants::QDOCUMENT_EXTRA_XML_TAG> </idem>\n
+    <QTextDocumentExtraConstants::QDOCUMENT_HTML_XML_TAG> </idem>\n
+  </QTextDocumentExtraConstants::QDOCUMENT_GENERAL_XML_TAG>\n
   You can :
   \li get a pointer to the referenced QTextDocument using document().\n
-  \li set the Presence of the document according to tkPrinter::Presence\n
-  \li set the Priority of the document according to tkPrinter::Priority\n
+  \li set the Presence of the document according to QPrinterEasy::Presence\n
+  \li set the Priority of the document according to QPrinterEasy::Priority\n
   \li get/set to/from Xml using toXml() , fromXml()\n
-  \sa QPrinterEasy
 */
 
-using namespace QTextDocumentExtraConstants;
+class QTextDocumentExtraPrivate {
+public:
+    QTextDocumentExtraPrivate() : m_Doc(0) {}
+
+    QPrinterEasy::Presence  m_Presence;
+    QPrinterEasy::Priority  m_Priority;
+    QString xmlVersion;
+    QString m_Html;
+    mutable bool m_DocCreated;
+    mutable QTextDocument *m_Doc;
+};
+
+QTextDocumentExtra::QTextDocumentExtra() : d(0)
+{
+    d = new QTextDocumentExtraPrivate();
+    d->xmlVersion = QDOCUMENT_XML_ACTUALVERSION;
+    d->m_Html = "";
+    d->m_Priority = QPrinterEasy::First;
+    d->m_Presence = QPrinterEasy::EachPages;
+    d->m_DocCreated = false;
+}
+
+QTextDocumentExtra::QTextDocumentExtra( const QString &html, const int presence, const int priority, const QString &version ) : d(0)
+{
+    d = new QTextDocumentExtraPrivate();
+    if (version.isEmpty())
+        d->xmlVersion = QDOCUMENT_XML_ACTUALVERSION;
+    else
+        d->xmlVersion = version;
+    d->m_Priority = QPrinterEasy::Priority(priority);
+    d->m_Presence = QPrinterEasy::Presence(presence);
+    d->m_Html = html;
+    d->m_DocCreated = false;
+}
 
 QTextDocumentExtra::~QTextDocumentExtra()
 {
-    if (m_Doc) delete m_Doc;
-    m_Doc = 0;
+    if (d) delete d;
+    d = 0;
 }
 
-QString QTextDocumentExtra::toHtml() const
+void QTextDocumentExtra::setPriority( QPrinterEasy::Priority p )
+{ d->m_Priority = p; }
+
+void QTextDocumentExtra::setPresence( QPrinterEasy::Presence p )
+{ d->m_Presence = p; }
+
+void QTextDocumentExtra::setHtml( const QString &html)
 {
-    if (m_Doc) {
-        return document()->toHtml();
-    }
-    return m_Html;
+    d->m_Html = html;
+    if (d->m_DocCreated)
+        d->m_Doc->setHtml(html);
 }
 
+QPrinterEasy::Priority QTextDocumentExtra::priority() const
+{ return d->m_Priority; }
 
-QTextDocument *QTextDocumentExtra::document() const
-{
-    if (!m_Doc) {
-        m_Doc = new QTextDocument();
-        m_Doc->setHtml(m_Html);
-        m_DocCreated = true;
-    }
-    return m_Doc;
-}
+QPrinterEasy::Presence QTextDocumentExtra::presence() const
+{ return d->m_Presence; }
 
-void QTextDocumentExtra::setTextWidth( qreal width )
+bool QTextDocumentExtra::lessThan( const QTextDocumentExtra *h1, const QTextDocumentExtra *h2 )
 {
-    document()->setTextWidth(width);
+    /** \todo  ? */
+    return true;
 }
 
 QString QTextDocumentExtra::toXml() const
 {
     QHash<QString,QString> t;
-    t.insert(QDOCUMENT_VERSION_XML_TAG, xmlVersion);
+    t.insert(QDOCUMENT_VERSION_XML_TAG, d->xmlVersion);
     t.insert(QDOCUMENT_PRESENCE_XML_TAG,QString::number(presence()));
     t.insert(QDOCUMENT_PRIORITY_XML_TAG, QString::number(priority()));
     t.insert(QDOCUMENT_EXTRA_XML_TAG, "");
@@ -126,4 +160,28 @@ QTextDocumentExtra *QTextDocumentExtra::fromXml(const QString &xml)
                                   QPrinterEasy::Presence(t.value(QDOCUMENT_PRESENCE_XML_TAG).toInt()),
                                   QPrinterEasy::Priority(t.value(QDOCUMENT_PRIORITY_XML_TAG).toInt()),
                                   t.value(QDOCUMENT_VERSION_XML_TAG));
+}
+
+
+QString QTextDocumentExtra::toHtml() const
+{
+    if (d->m_Doc) {
+        return document()->toHtml();
+    }
+    return d->m_Html;
+}
+
+QTextDocument *QTextDocumentExtra::document() const
+{
+    if (!d->m_Doc) {
+        d->m_Doc = new QTextDocument();
+        d->m_Doc->setHtml(d->m_Html);
+        d->m_DocCreated = true;
+    }
+    return d->m_Doc;
+}
+
+void QTextDocumentExtra::setTextWidth( qreal width )
+{
+    document()->setTextWidth(width);
 }
