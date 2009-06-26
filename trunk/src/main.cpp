@@ -33,6 +33,8 @@
 #include <QDir>
 #include <QString>
 #include <QTextFrame>
+#include <QAbstractTextDocumentLayout>
+#include <QTextTable>
 #include <QtDebug>
 
 #include "qprintereasy.h"
@@ -143,17 +145,65 @@ void example7()
 
 void warnDocumentBlockCount()
 {
-    QTextDocument td(document);
-    qWarning() << "document blockCount" << td.blockCount();
+    QTextDocument td;
+    td.setHtml(document);
+    QPrinter p;
+    p.setPaperSize( QPrinter::A4 );
+//    td.setPageSize( p.pageRect().size() );
+    td.setTextWidth( p.pageRect().width());
+
+    qWarning() << "document blockCount" << td.blockCount() << "doc size" << td.size();
 
     QTextFrame::iterator it;
     int i = 0;
     for (it = td.rootFrame()->begin(); !(it.atEnd()); ++it) {
+        if (it.currentFrame()) {
+            qWarning() << "Frame : number of children" << it.currentFrame()->childFrames().count();
+            QTextTable *table = qobject_cast<QTextTable*>( it.currentFrame() );
+            if (table) {
+                qWarning() << "   --> Frame : table" << table->firstPosition() << table->lastPosition();
+            }
+        }
+        else {
+            QTextLayout *layout = it.currentBlock().layout();
+            qWarning() << "Block" << it.currentBlock().blockNumber()
+                       << td.documentLayout()->blockBoundingRect( it.currentBlock() )
+                       << "block line count" << it.currentBlock().lineCount()
+                       << "layout line count" << layout->lineCount();
+            int l = 0;
+            for(l=0;l<layout->lineCount();++l) {
+                QTextLine line = layout->lineAt(l);
+                if (line.isValid())
+                    qWarning() << "            Line" << line.rect();
+            }
+        }
         ++i;
     }
     qWarning() << "document frameCount" << i;
+
+//    int i = 0;
+//    QTextFrame *f = td.rootFrame();
+//    qWarning() << f->childFrames().count();
+//
+//    foreach( QTextFrame *c, f->childFrames() )  {
+//        qWarning() << "x";
+//        warnFrameChildren(c , 1);
+//        ++i;
+//    }
+    qWarning() << "document frameCount" << i;
 }
 
+void examplePdf()
+{
+    QPrinterEasy pe;
+    pe.askForPrinter();
+    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
+    pe.setHeader( header2, QPrinterEasy::EachPages );
+    pe.setFooter( footer, QPrinterEasy::ButFirstPage );
+    pe.setContent( document );
+    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EvenPages );
+    pe.toPdf( qApp->applicationDirPath() + "/pdfSample.pdf" );
+}
 
 
 int main(int argc, char *argv[])
@@ -171,13 +221,16 @@ int main(int argc, char *argv[])
     pixWatermark.load( dir.filePath("pixmapWatermark.png") );
     document = QString::fromUtf8(readEntireFile(dir.filePath("document.html")));
 
-    example1();
-    example2();
-    example3();
-    example4();
-    example5();
-    example6();
-    example7();
+//    example1();
+//    example2();
+//    example3();
+//    example4();
+//    example5();
+//    example6();
+//    example7();
+    examplePdf();
+
+//    warnDocumentBlockCount();
 
 //    QPrinterEasy pe;
 //    pe.askForPrinter();
