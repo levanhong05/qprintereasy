@@ -48,7 +48,7 @@
 #include <QTextLayout>
 #include <QAbstractTextDocumentLayout>
 #include <QTextTable>
-
+#include <QFileInfo>
 
 #include <math.h>
 
@@ -440,7 +440,6 @@ const QString fontToHtml( const QFont &font, const QString &color )
 bool QPrinterEasyPrivate::complexDraw()
 {
 //    qWarning() << "complexDraw";
-    QPainter painter(m_Printer);
     QTextFrame *frame = m_Content->rootFrame();
 
     // Here we have to print different documents :
@@ -460,19 +459,20 @@ bool QPrinterEasyPrivate::complexDraw()
     int pageNumber = 0;
 
     QTextBlock block;
+    QTextFrame::iterator it;
+    QPainter painter(m_Printer);
     painter.save();
 
-    QTextFrame::iterator it;
-
     for (it = frame->begin(); !(it.atEnd()); ++it) {
-        QTextFrame *table = qobject_cast<QTextTable*>( it.currentFrame() );
+        QTextTable *table = qobject_cast<QTextTable*>( it.currentFrame() );
         block = it.currentBlock();
 
         if (table) {
             // calculate table height
             QRectF tableRect = m_Content->documentLayout()->frameBoundingRect(it.currentFrame());
-            painter.drawRect(tableRect);
-            painter.drawText(tableRect, QString("\n Tables are not yet supported in complex drawing.") );
+
+//            painter.drawRect(tableRect);
+//            painter.drawText(tableRect, QString("\n Tables are not yet supported in complex drawing.") );
 
             // need new page ?
             if ( tableRect.height() + drawnedSize.height() > pageSize.height() )
@@ -487,22 +487,24 @@ bool QPrinterEasyPrivate::complexDraw()
                                    (tableRect.top() - lastDrawnedRect.bottom() ) );
             lastDrawnedRect = tableRect;
 
-        } else if ( block.isValid() ) {
+        }
+        if ( block.isValid() ) {
 
             blockRect = m_Content->documentLayout()->blockBoundingRect(block);
-
+//            painter.drawRect(blockRect);
             // need new page ?
             if ( (drawnedSize.height() + blockRect.size().height()) > pageSize.height() ) {
-
                 int i = 0;
                 QTextLayout *layout = block.layout();
+                qWarning() << "block linecount()" << block.lineCount();
                 if ( layout->lineCount() > 1 ) {
 
 
                     // TODO --> draw line by line
 
 
-//                    qWarning() << "lines in block" << block.layout()->lineCount();
+                    qWarning() << "lines in block" << block.layout()->lineCount();
+
                     int heightSave = drawnedSize.height();
                     // draw the maximum lines into the page before creating a new one
                     while (layout->lineAt(i).height() + drawnedSize.height() < pageSize.height()) {
@@ -1167,3 +1169,50 @@ void QPrinterEasy::previewHeaderFooter( QPixmap &drawTo,
     drawTo = drawTo.scaled( 250, 250, Qt::KeepAspectRatio, Qt::SmoothTransformation );
 }
 
+/**
+  \brief Prints the recorded headers/footers/watermarks and content to a PDF file named \e fileName.
+  \e fileName must be an absolute path file name and will be replaced without warning if it already exists.
+  The QPrinter MUST BE specified FIRST !
+*/
+bool QPrinterEasy::toPdf(const QString &fileName)
+{
+    Q_ASSERT(d->m_Printer);
+    if (!d->m_Printer)
+        return false;
+    Q_ASSERT(!fileName.isEmpty());
+    if (fileName.isEmpty())
+        return false;
+    QString tmp = fileName;
+    if (QFileInfo(tmp).suffix().isEmpty())
+        tmp.append(".pdf");
+    QPrinter::OutputFormat out = d->m_Printer->outputFormat();
+    d->m_Printer->setOutputFormat(QPrinter::PdfFormat);
+    d->m_Printer->setOutputFileName(tmp);
+    print();
+    d->m_Printer->setOutputFormat(out);
+    return true;
+}
+
+/**
+  \brief Prints the \e html content with the recorded headers/footers/watermarks to a PDF file named \e fileName.
+  \e fileName must be an absolute path file name and will be replaced without warning if it already exists.\n
+  This function replaces the actual content of this class.
+  The QPrinter MUST BE specified FIRST !
+*/
+bool QPrinterEasy::toPdf(const QString &fileName, const QString &html)
+{
+    d->m_Content->setHtml(html);
+    return toPdf(fileName);
+}
+
+/**
+  \brief Prints the \e docToPrint document with the recorded headers/footers/watermarks to a PDF file named \e fileName.
+  \e fileName must be an absolute path file name and will be replaced without warning if it already exists.
+  This function replaces the actual content of this class.
+  The QPrinter MUST BE specified FIRST !
+*/
+bool QPrinterEasy::toPdf(const QString &fileName, const QTextDocument & docToPrint)
+{
+    d->m_Content->setHtml( docToPrint.toHtml() );
+    return toPdf(fileName);
+}

@@ -53,7 +53,7 @@ QT_END_NAMESPACE
  * \file qprintereasy.h
  * \author QPrinterEasy Team
  * \version 0.0.8
- * \date June 24 2009
+ * \date June 26 2009
 */
 
 class Q_QPRINTEREASY_EXPORT QPrinterEasy : public QObject
@@ -158,6 +158,10 @@ public Q_SLOTS:
     bool print( const QTextDocument & docToPrint );
     bool printWithDuplicata( bool state = true );
     bool print( const QString &htmlToPrint );
+
+    bool toPdf(const QString &fileName);
+    bool toPdf(const QString &fileName, const QString &html);
+    bool toPdf(const QString &fileName, const QTextDocument & docToPrint);
 
 protected Q_SLOTS:
     bool print( QPrinter *printer = 0 );  // used by QPrinterEasy PreviewDialog
