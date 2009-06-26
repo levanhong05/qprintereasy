@@ -471,8 +471,8 @@ bool QPrinterEasyPrivate::complexDraw()
             // calculate table height
             QRectF tableRect = m_Content->documentLayout()->frameBoundingRect(it.currentFrame());
 
-//            painter.drawRect(tableRect);
-//            painter.drawText(tableRect, QString("\n Tables are not yet supported in complex drawing.") );
+            painter.drawRect(tableRect);
+            painter.drawText(tableRect, QString("\n Tables are not yet supported in complex drawing.") );
 
             // need new page ?
             if ( tableRect.height() + drawnedSize.height() > pageSize.height() )
