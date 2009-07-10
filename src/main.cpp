@@ -193,6 +193,21 @@ void warnDocumentBlockCount()
     qWarning() << "document frameCount" << i;
 }
 
+void example8()
+{
+    qWarning() << "example 8 : MultiHeaders, one footer, multiwatermarks";
+    /** \todo If multiwatermarks, and watermarks does not have the same presence --> BUG need to store watermarks into a hash<presence,pixmap>. */
+    QPrinterEasy pe;
+    pe.askForPrinter();
+    pe.setHeader( header, QPrinterEasy::FirstPageOnly );
+    pe.setHeader( header2, QPrinterEasy::EachPages );
+    pe.setFooter( footer, QPrinterEasy::ButFirstPage );
+    pe.setContent( document );
+    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EachPages );
+    pe.addWatermarkText( "Second watermark", QPrinterEasy::EachPages, Qt::AlignBottom, Qt::AlignLeft, QFont(), QColor("lightgray") );
+    pe.previewDialog();
+}
+
 void examplePdf()
 {
     QPrinterEasy pe;
@@ -228,7 +243,8 @@ int main(int argc, char *argv[])
 //    example5();
 //    example6();
 //    example7();
-    examplePdf();
+    example8();
+//    examplePdf();
 
 //    warnDocumentBlockCount();
 

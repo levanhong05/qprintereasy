@@ -918,8 +918,10 @@ void QPrinterEasy::addWatermarkPixmap( const QPixmap & pix, const Presence p , c
     QRectF pageRect = d->m_Printer->pageRect();
 
     // prepare watermark pixmap
-    d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
-    d->m_Watermark.fill();
+    if (d->m_Watermark.isNull()) {
+        d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
+        d->m_Watermark.fill();
+    }
 
     // TODO page margins
     // TODO manageDPI of pixmap
@@ -962,8 +964,10 @@ void QPrinterEasy::addWatermarkHtml( const QString & html,
     // get some values about the printing page and prepare the pixmap
     QRectF pageRect = d->m_Printer->pageRect();
 
-    d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
-    d->m_Watermark.fill();
+    if (d->m_Watermark.isNull()) {
+        d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
+        d->m_Watermark.fill();
+    }
     previewHtmlWatermark(d->m_Watermark, html, p, watermarkAlignment, orientation );
 }
 
@@ -978,7 +982,7 @@ void QPrinterEasy::previewDocumentWatermark( QPixmap &drawTo,
     Q_UNUSED(orientation);
     // TODO Manage page margins +++
     // drawTo MUST BE SIZED AS WANTED BEFORE CALLING THIS FUNCTION ++++
-    drawTo.fill();
+    // drawTo.fill();
     QSizeF docSizeSave = doc->size();
     QTextOption docOptionSave = doc->defaultTextOption();
     QTextOption opt;
@@ -1071,8 +1075,11 @@ void QPrinterEasy::addWatermarkText( const QString & plainText,
     // get some values about the printing page and prepare the pixmap
     QRectF pageRect = d->m_Printer->pageRect();
 
-    d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
-    d->m_Watermark.fill();
+    if (d->m_Watermark.isNull()) {
+        d->m_Watermark = QPixmap( pageRect.width(), pageRect.height() );
+        d->m_Watermark.fill();
+    }
+
     QString html = QString("<html><body><p %1 style=\"%2\">%3</p></body></html>")
                    .arg(Qt::AlignCenter)
                    .arg(fontToHtml(font, color.name()))
