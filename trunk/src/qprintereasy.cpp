@@ -336,8 +336,24 @@ public:
         return QSizeF( this->pageWidth(), height );
     }
 
+    QRect getSimpleDrawCurrentRectangle(int pageNumber)
+    {
+        int headerHeight = 0;
+        foreach( QTextDocument *doc, headers(pageNumber) ) {
+            headerHeight += doc->size().height();
+        }
+        int footerHeight = FOOTER_BOTTOM_MARGIN;
+        foreach( QTextDocument *doc, footers(pageNumber) ) {
+            footerHeight += doc->size().height();
+        }
+        if (footerHeight==FOOTER_BOTTOM_MARGIN)
+            footerHeight=0;
+        int currentHeight = m_Printer->pageRect().height() - headerHeight - footerHeight;
+        return QRect(QPoint(0,0), QSize( pageWidth(), currentHeight ) );
+    }
+
     /** \brief Draws the headers and footers for the simpleDraw method. Painter must be translated to the beginning of the paperPage.*/
-    QRect simpleDrawHeaderFooter( QPainter &painter,
+    void simpleDrawHeaderFooter( QPainter &painter,
                                   QSizeF &headerSize, QSizeF &footerSize, const int currentPageNumber )
     {
         int headerHeight = 0;
@@ -363,11 +379,9 @@ public:
             doc->drawContents(&painter, footRect);
             painter.restore();
         }
+        if (footerHeight==FOOTER_BOTTOM_MARGIN)
+            footerHeight=0;
         footerSize.setHeight( footerHeight );
-
-        // recalculate the currentRect for the content drawing
-        int currentHeight = m_Printer->pageRect().height() - headerHeight - footerHeight;
-        return QRect(QPoint(0,0), QSize( pageWidth(), currentHeight ) );
     }
 
 private:
@@ -659,14 +673,27 @@ bool QPrinterEasyPrivate::simpleDrawToPainter( QPainter &painter, QRect &content
     int drawnedHeight = 0;
     QRectF headRect = QRectF(QPoint(0,0), headerSize );
     QRect currentRect = contentRect;
-
+    int fromPage = m_Printer->fromPage();
+    int toPage = m_Printer->toPage();
+    bool fromToPage = ((fromPage>0) || (toPage>0));
     while (currentRect.intersects(contentRect)) {
+        currentRect = getSimpleDrawCurrentRectangle(pageNumber);
+        if (fromToPage) {
+            if (pageNumber>toPage)
+                break;
+            if (pageNumber<fromPage) {
+                drawnedHeight += currentRect.height();
+                pageNumber++;
+                continue;
+            }
+        }
         // at the beginning of the while, painter is translated to the 0,0 position of the new page
         simpleDrawWatermark( painter, pageNumber );
-        currentRect = simpleDrawHeaderFooter( painter, headerSize, footerSize, pageNumber );
+        simpleDrawHeaderFooter( painter, headerSize, footerSize, pageNumber );
 
         // draw content for this page
         simpleDrawContent(painter, headerSize, currentRect, drawnedHeight);
+        qWarning() << "page printed" << pageNumber << drawnedHeight;
 
         // calculate new page
         // go to content next page
@@ -686,8 +713,10 @@ bool QPrinterEasyPrivate::simpleDrawToPainter( QPainter &painter, QRect &content
         }
 
         // if there is still something to print --> create a newpage to the printer
-        if (currentRect.intersects(contentRect))
-            m_Printer->newPage();
+        if (currentRect.intersects(contentRect)) {
+            if ((pageNumber>=fromToPage) && (pageNumber<=toPage))
+                m_Printer->newPage();
+        }
     }
     painter.end();
     return true;
