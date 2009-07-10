@@ -208,6 +208,20 @@ void example8()
     pe.previewDialog();
 }
 
+void example9()
+{
+    qWarning() << "example 9 : one header, one footer, one watermarks from page 2 to 3";
+    /** \todo Does not work with complexDrawing */
+    QPrinterEasy pe;
+    pe.askForPrinter();
+    pe.printer()->setFromTo(2,3);
+    pe.setHeader( header );
+    pe.setFooter( footer );
+    pe.setContent( document );
+    pe.addWatermarkText( "Adding a plain text\nWATERMARK", QPrinterEasy::EachPages );
+    pe.previewDialog();
+}
+
 void examplePdf()
 {
     QPrinterEasy pe;
@@ -243,7 +257,8 @@ int main(int argc, char *argv[])
 //    example5();
 //    example6();
 //    example7();
-    example8();
+//    example8();
+    example9();
 //    examplePdf();
 
 //    warnDocumentBlockCount();
