@@ -127,6 +127,8 @@
   Usefull for populating a QComboBox for example.
 */
 
+const int FOOTER_BOTTOM_MARGIN = 10;
+
 
 /** \brief Only keeps some private members and private datas */
 class QPrinterEasyPrivate
@@ -321,12 +323,16 @@ public:
     QSizeF getSimpleDrawContentPageSize()
     {
         int height = m_Printer->pageRect().height();
+        bool footerMargin = false;
         foreach( QTextDocument *doc, headers(1) ) {
             height -= doc->size().height();
         }
         foreach( QTextDocument *doc, footers(1) ) {
+            footerMargin = true;
             height -= doc->size().height();
         }
+        if (footerMargin)
+            height -= FOOTER_BOTTOM_MARGIN;
         return QSizeF( this->pageWidth(), height );
     }
 
@@ -347,7 +353,7 @@ public:
         painter.restore();    // return to page beginning
 
         // do we have to include the footer ?
-        int footerHeight = 0;
+        int footerHeight = FOOTER_BOTTOM_MARGIN;
         foreach( QTextDocument *doc, footers(currentPageNumber) ) {
             footerSize = doc->size();
             footerHeight += doc->size().height();
