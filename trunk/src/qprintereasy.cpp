@@ -714,8 +714,11 @@ bool QPrinterEasyPrivate::simpleDrawToPainter( QPainter &painter, QRect &content
 
         // if there is still something to print --> create a newpage to the printer
         if (currentRect.intersects(contentRect)) {
-            if ((pageNumber>=fromToPage) && (pageNumber<=toPage))
-                m_Printer->newPage();
+            if (fromToPage) {
+                if ((pageNumber>=fromToPage) && (pageNumber<=toPage))
+                    m_Printer->newPage();
+            } else
+                    m_Printer->newPage();
         }
     }
     painter.end();
